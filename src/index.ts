@@ -33,6 +33,10 @@ io.on('connection', (socket) => {
     console.log(`User disconnected: ${socket.id}`);
     roomManager.handleDisconnect(socket);
   });
+
+  socket.on('place_bid', (data) => roomManager.handleGameEvent(socket, 'place_bid', data));
+  socket.on('select_trump', (data) => roomManager.handleGameEvent(socket, 'select_trump', data));
+  socket.on('play_card', (data) => roomManager.handleGameEvent(socket, 'play_card', data));
 });
 
 const PORT = process.env.PORT || 3001;
