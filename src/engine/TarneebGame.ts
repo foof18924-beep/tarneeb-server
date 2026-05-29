@@ -79,7 +79,8 @@ export class TarneebGame implements Game {
         this.startRound(); // redeal
         return;
       }
-      this.state = 'SELECTING_TRUMP';
+      this.trumpSuit = 'Hearts';
+      this.state = 'PLAYING';
       this.currentTurnIndex = this.highestBidderIndex;
     } else {
       this.currentTurnIndex = (this.currentTurnIndex + 1) % 4;
@@ -87,10 +88,7 @@ export class TarneebGame implements Game {
   }
 
   selectTrump(playerIndex: number, suit: Suit) {
-    if (this.state !== 'SELECTING_TRUMP' || playerIndex !== this.currentTurnIndex) return;
-    this.trumpSuit = suit;
-    this.state = 'PLAYING';
-    this.currentTurnIndex = this.highestBidderIndex;
+    // Deprecated since Trump is fixed to Hearts
   }
 
   playCard(playerIndex: number, cardIndex: number) {
@@ -186,8 +184,6 @@ export class TarneebGame implements Game {
   public handleTimeout() {
     if (this.state === 'BIDDING') {
       this.placeBid(this.currentTurnIndex, 'PASS');
-    } else if (this.state === 'SELECTING_TRUMP') {
-      this.selectTrump(this.currentTurnIndex, 'Hearts'); // Default to Hearts
     } else if (this.state === 'PLAYING') {
       const player = this.players[this.currentTurnIndex];
       // Find a valid card to play
