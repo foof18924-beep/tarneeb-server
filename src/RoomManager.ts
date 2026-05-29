@@ -239,7 +239,8 @@ export class RoomManager {
            if (this.timers.has(roomCode)) clearTimeout(this.timers.get(roomCode));
         }
 
-        if (players.length === 0) {
+        const humanPlayers = players.filter(p => !p.id.startsWith('BOT_'));
+        if (humanPlayers.length === 0) {
           this.rooms.delete(roomCode);
           this.timers.delete(roomCode);
           this.turnEndTimes.delete(roomCode);
