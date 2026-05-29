@@ -48,6 +48,7 @@ io.on('connection', (socket) => {
   socket.on('admin_get_stats', (data) => roomManager.handleGameEvent(socket, 'admin_get_stats', data));
   socket.on('admin_set_target_score', (data) => roomManager.handleGameEvent(socket, 'admin_set_target_score', data));
   socket.on('admin_set_prize', (data) => roomManager.handleGameEvent(socket, 'admin_set_prize', data));
+  socket.on('admin_test_room', (data) => roomManager.handleGameEvent(socket, 'admin_test_room', data));
 });
 
 const PORT = process.env.PORT || 3001;
