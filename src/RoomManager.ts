@@ -89,6 +89,9 @@ export class RoomManager {
       this.globalPrize = data.prizeValue;
       this.io.emit('prize_update', { prizeValue: this.globalPrize });
       return;
+    } else if (event === 'admin_test_room') {
+      this.adminTestRoom(socket, data.username, data.uid);
+      return;
     } else if (event === 'leave_room') {
        this.handleDisconnect(socket);
        return;
@@ -134,7 +137,11 @@ export class RoomManager {
       return;
     }
 
-    const endTime = Date.now() + 20000; // 20 seconds
+    const currentPlayer = game.players[game.currentTurnIndex];
+    const isBot = currentPlayer && currentPlayer.id.startsWith('BOT_');
+    const delay = isBot ? 1500 : 20000;
+
+    const endTime = Date.now() + delay;
     this.turnEndTimes.set(roomCode, endTime);
 
     const timeout = setTimeout(() => {
@@ -143,9 +150,34 @@ export class RoomManager {
         g.handleTimeout();
         this.broadcastGameState(roomCode);
       }
-    }, 20000);
+    }, delay);
 
     this.timers.set(roomCode, timeout);
+  }
+
+  adminTestRoom(socket: Socket, username: string, uid: string) {
+    const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    this.rooms.set(roomCode, []);
+    socket.join(roomCode);
+    
+    const room = this.rooms.get(roomCode)!;
+    room.push({ id: socket.id, username: username || "المدير" });
+    room.push({ id: `BOT_1_${roomCode}`, username: "بوت 1 (أحمد)" });
+    room.push({ id: `BOT_2_${roomCode}`, username: "بوت 2 (سالم)" });
+    room.push({ id: `BOT_3_${roomCode}`, username: "بوت 3 (عمر)" });
+    
+    this.io.to(roomCode).emit('room_update', {
+      roomCode,
+      players: room
+    });
+    
+    const game = new TarneebGame();
+    room.forEach(p => game.addPlayer(new Player(p.id, p.username)));
+    game.startRound(this.globalTargetScore);
+    
+    this.games.set(roomCode, game);
+    this.io.to(roomCode).emit('game_start', { message: 'بدأت اللعبة!' });
+    this.broadcastGameState(roomCode);
   }
 
   broadcastGameState(roomCode: string) {
