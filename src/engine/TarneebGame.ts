@@ -171,14 +171,16 @@ export class TarneebGame implements Game {
 
     if (team1Bid > 0) {
       if (this.team1Tricks >= team1Bid) {
-        this.team1Score += this.team1Tricks;
+        const points = team1Bid >= 7 ? this.team1Tricks * 2 : this.team1Tricks;
+        this.team1Score += points;
       } else {
         this.team1Score -= team1Bid;
       }
       this.team2Score += this.team2Tricks;
     } else {
       if (this.team2Tricks >= team2Bid) {
-        this.team2Score += this.team2Tricks;
+        const points = team2Bid >= 7 ? this.team2Tricks * 2 : this.team2Tricks;
+        this.team2Score += points;
       } else {
         this.team2Score -= team2Bid;
       }
