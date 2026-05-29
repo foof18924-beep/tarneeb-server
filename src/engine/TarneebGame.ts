@@ -10,7 +10,7 @@ export class TarneebGame implements Game {
   public state: GameState = 'WAITING';
   public deck: Deck;
   
-  public currentBid: number = 6;
+  public currentBid: number = 2; // minimum valid bid is 3
   public highestBidderIndex: number = -1;
   public trumpSuit: Suit | null = null;
   
@@ -50,7 +50,7 @@ export class TarneebGame implements Game {
       this.players[i].addCards(this.deck.deal(13));
     }
     
-    this.currentBid = 6;
+    this.currentBid = 2; // minimum bid is 3
     this.highestBidderIndex = -1;
     this.currentTurnIndex = 0;
     this.consecutivePasses = 0;
