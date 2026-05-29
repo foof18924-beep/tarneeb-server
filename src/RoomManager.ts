@@ -70,6 +70,7 @@ export class RoomManager {
   }
 
   public globalTargetScore: number = 39;
+  public globalPrize: number = 100;
 
   handleGameEvent(socket: Socket, event: string, data: any) {
     // Admin Events
@@ -84,6 +85,13 @@ export class RoomManager {
       this.globalTargetScore = data.targetScore;
       this.io.emit('global_alert', { message: `تم تحديث نقاط الفوز لتصبح: ${this.globalTargetScore}` });
       return;
+    } else if (event === 'admin_set_prize') {
+      this.globalPrize = data.prizeValue;
+      this.io.emit('prize_update', { prizeValue: this.globalPrize });
+      return;
+    } else if (event === 'leave_room') {
+       this.handleDisconnect(socket);
+       return;
     }
 
     let roomCode = '';
