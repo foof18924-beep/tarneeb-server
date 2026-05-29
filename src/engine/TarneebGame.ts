@@ -3,7 +3,7 @@ import { Player } from './Player';
 import { Card, Suit } from './Card';
 import { Game } from './Game';
 
-export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 'FINISHED';
+export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 'TRICK_END' | 'FINISHED';
 
 export class TarneebGame implements Game {
   public players: Player[] = [];
@@ -115,13 +115,15 @@ export class TarneebGame implements Game {
     this.currentTrick.push({ playerIndex, card: playedCard });
     
     if (this.currentTrick.length === 4) {
-      this.resolveTrick();
+      this.state = 'TRICK_END';
     } else {
       this.currentTurnIndex = (this.currentTurnIndex + 1) % 4;
     }
   }
 
-  private resolveTrick() {
+  public resolveTrick() {
+    if (this.state !== 'TRICK_END') return;
+
     let winningPlay = this.currentTrick[0];
 
     for (let i = 1; i < 4; i++) {
@@ -146,6 +148,7 @@ export class TarneebGame implements Game {
     this.playerTricks[winnerIndex]++;
 
     this.tricksPlayed++;
+    this.state = 'PLAYING';
     
     if (this.tricksPlayed === 13) {
       this.resolveRound();

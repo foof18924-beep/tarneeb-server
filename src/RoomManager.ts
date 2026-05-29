@@ -119,6 +119,9 @@ export class RoomManager {
       game.selectTrump(playerIndex, data.suit);
     } else if (event === 'play_card') {
       game.playCard(playerIndex, data.cardIndex);
+      this.broadcastGameState(roomCode);
+      this.checkTrickEnd(roomCode);
+      return;
     } else if (event === 'play_again') {
       game.startRound(this.globalTargetScore);
     }
@@ -149,10 +152,21 @@ export class RoomManager {
       if (g && g.state !== 'FINISHED') {
         g.handleTimeout();
         this.broadcastGameState(roomCode);
+        this.checkTrickEnd(roomCode);
       }
     }, delay);
 
     this.timers.set(roomCode, timeout);
+  }
+
+  private checkTrickEnd(roomCode: string) {
+    const game = this.games.get(roomCode);
+    if (game && game.state === 'TRICK_END') {
+      setTimeout(() => {
+        game.resolveTrick();
+        this.broadcastGameState(roomCode);
+      }, 1500);
+    }
   }
 
   adminTestRoom(socket: Socket, username: string, uid: string) {
