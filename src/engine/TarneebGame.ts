@@ -188,10 +188,27 @@ export class TarneebGame implements Game {
     }
 
     // Target score to win
-    if (this.team1Score >= 31 || this.team2Score >= 31) {
+    if (this.team1Score >= 39 || this.team2Score >= 39) {
       this.state = 'FINISHED';
     } else {
       this.startRound();
+    }
+  }
+
+  public handleTimeout() {
+    if (this.state === 'BIDDING') {
+      this.placeBid(this.currentTurnIndex, 'PASS');
+    } else if (this.state === 'SELECTING_TRUMP') {
+      this.selectTrump(this.currentTurnIndex, 'Hearts'); // Default to Hearts
+    } else if (this.state === 'PLAYING') {
+      const player = this.players[this.currentTurnIndex];
+      // Find a valid card to play
+      let validCardIndex = 0;
+      if (this.leadSuit) {
+        const hasLead = player.cards.findIndex(c => c.suit === this.leadSuit);
+        if (hasLead !== -1) validCardIndex = hasLead;
+      }
+      this.playCard(this.currentTurnIndex, validCardIndex);
     }
   }
 }

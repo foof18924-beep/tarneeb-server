@@ -5,6 +5,8 @@ import { Player } from './engine/Player';
 export class RoomManager {
   private rooms: Map<string, any[]> = new Map(); // roomCode -> players[]
   private games: Map<string, TarneebGame> = new Map(); // roomCode -> game instance
+  private timers: Map<string, NodeJS.Timeout> = new Map();
+  private turnEndTimes: Map<string, number> = new Map();
   private io: Server;
 
   constructor(io: Server) {
@@ -31,7 +33,6 @@ export class RoomManager {
 
   autoMatch(socket: Socket, username: string, uid: string) {
     let targetRoom = '';
-    // Find an existing room with < 4 players
     for (const [roomCode, players] of this.rooms.entries()) {
       if (players.length < 4) {
         targetRoom = roomCode;
@@ -58,7 +59,6 @@ export class RoomManager {
       players: room
     });
     
-    // Start game when full
     if (room.length === 4 && !this.games.has(targetRoom)) {
         const game = new TarneebGame();
         room.forEach(p => game.addPlayer(new Player(p.id, p.username)));
@@ -69,9 +69,7 @@ export class RoomManager {
     }
   }
 
-  // Socket event handlers from index.ts will call these
   handleGameEvent(socket: Socket, event: string, data: any) {
-    // Find which room this socket is in
     let roomCode = '';
     let playerIndex = -1;
     
@@ -94,9 +92,36 @@ export class RoomManager {
       game.selectTrump(playerIndex, data.suit);
     } else if (event === 'play_card') {
       game.playCard(playerIndex, data.cardIndex);
+    } else if (event === 'play_again') {
+      game.startRound();
     }
 
     this.broadcastGameState(roomCode);
+  }
+
+  private resetTimer(roomCode: string) {
+    if (this.timers.has(roomCode)) {
+      clearTimeout(this.timers.get(roomCode));
+    }
+
+    const game = this.games.get(roomCode);
+    if (!game || game.state === 'FINISHED') {
+      this.turnEndTimes.delete(roomCode);
+      return;
+    }
+
+    const endTime = Date.now() + 10000; // 10 seconds
+    this.turnEndTimes.set(roomCode, endTime);
+
+    const timeout = setTimeout(() => {
+      const g = this.games.get(roomCode);
+      if (g && g.state !== 'FINISHED') {
+        g.handleTimeout();
+        this.broadcastGameState(roomCode);
+      }
+    }, 10000);
+
+    this.timers.set(roomCode, timeout);
   }
 
   broadcastGameState(roomCode: string) {
@@ -104,7 +129,9 @@ export class RoomManager {
     const players = this.rooms.get(roomCode);
     if (!game || !players) return;
 
-    // Send customized state to each player
+    this.resetTimer(roomCode);
+    const turnEndTime = this.turnEndTimes.get(roomCode);
+
     players.forEach((p, index) => {
       const state = {
         state: game.state,
@@ -119,7 +146,8 @@ export class RoomManager {
         currentTrick: game.currentTrick,
         myIndex: index,
         myHand: game.players[index].cards,
-        players: game.players.map(pl => ({ name: pl.name, cardCount: pl.cards.length }))
+        players: game.players.map(pl => ({ name: pl.name, cardCount: pl.cards.length })),
+        turnEndTime
       };
       
       this.io.to(p.id).emit('game_state_update', state);
@@ -136,14 +164,16 @@ export class RoomManager {
           players
         });
         
-        // End game if someone leaves
         if (this.games.has(roomCode)) {
            this.io.to(roomCode).emit('game_state_update', { state: 'PLAYER_DISCONNECTED' });
            this.games.delete(roomCode);
+           if (this.timers.has(roomCode)) clearTimeout(this.timers.get(roomCode));
         }
 
         if (players.length === 0) {
           this.rooms.delete(roomCode);
+          this.timers.delete(roomCode);
+          this.turnEndTimes.delete(roomCode);
         }
         break;
       }
