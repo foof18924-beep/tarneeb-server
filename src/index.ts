@@ -49,6 +49,28 @@ io.on('connection', (socket) => {
   socket.on('admin_set_target_score', (data) => roomManager.handleGameEvent(socket, 'admin_set_target_score', data));
   socket.on('admin_set_prize', (data) => roomManager.handleGameEvent(socket, 'admin_set_prize', data));
   socket.on('admin_test_room', (data) => roomManager.handleGameEvent(socket, 'admin_test_room', data));
+
+  // WebRTC Signaling
+  socket.on('webrtc_offer', (data) => {
+    socket.to(data.targetId).emit('webrtc_offer', {
+      senderId: socket.id,
+      offer: data.offer
+    });
+  });
+
+  socket.on('webrtc_answer', (data) => {
+    socket.to(data.targetId).emit('webrtc_answer', {
+      senderId: socket.id,
+      answer: data.answer
+    });
+  });
+
+  socket.on('webrtc_ice_candidate', (data) => {
+    socket.to(data.targetId).emit('webrtc_ice_candidate', {
+      senderId: socket.id,
+      candidate: data.candidate
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3001;
