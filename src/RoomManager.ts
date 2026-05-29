@@ -62,14 +62,33 @@ export class RoomManager {
     if (room.length === 4 && !this.games.has(targetRoom)) {
         const game = new TarneebGame();
         room.forEach(p => game.addPlayer(new Player(p.id, p.username)));
-        game.startRound();
+        game.startRound(this.globalTargetScore);
         this.games.set(targetRoom, game);
         this.io.to(targetRoom).emit('game_start', { message: 'بدأت اللعبة!' });
         this.broadcastGameState(targetRoom);
     }
   }
 
+  public globalTargetScore: number = 39;
+
   handleGameEvent(socket: Socket, event: string, data: any) {
+    // Admin Events
+    if (event === 'admin_broadcast') {
+      this.io.emit('global_alert', { message: data.message });
+      return;
+    } else if (event === 'admin_get_stats') {
+      let totalPlayers = 0;
+      for (const players of this.rooms.values()) {
+        totalPlayers += players.length;
+      }
+      socket.emit('admin_stats', { activeRooms: this.games.size, totalPlayers });
+      return;
+    } else if (event === 'admin_set_target_score') {
+      this.globalTargetScore = data.targetScore;
+      this.io.emit('global_alert', { message: `تم تحديث نقاط الفوز لتصبح: ${this.globalTargetScore}` });
+      return;
+    }
+
     let roomCode = '';
     let playerIndex = -1;
     
@@ -93,7 +112,7 @@ export class RoomManager {
     } else if (event === 'play_card') {
       game.playCard(playerIndex, data.cardIndex);
     } else if (event === 'play_again') {
-      game.startRound();
+      game.startRound(this.globalTargetScore);
     }
 
     this.broadcastGameState(roomCode);
@@ -143,6 +162,7 @@ export class RoomManager {
         team2Tricks: game.team2Tricks,
         team1Score: game.team1Score,
         team2Score: game.team2Score,
+        targetScore: game.targetScore,
         currentTrick: game.currentTrick,
         myIndex: index,
         myHand: game.players[index].cards,

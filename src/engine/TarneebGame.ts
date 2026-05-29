@@ -23,6 +23,7 @@ export class TarneebGame implements Game {
   
   public team1Score: number = 0;
   public team2Score: number = 0;
+  public targetScore: number = 39;
 
   public currentTrick: { playerIndex: number, card: Card }[] = [];
   public leadSuit: Suit | null = null;
@@ -38,7 +39,8 @@ export class TarneebGame implements Game {
     }
   }
 
-  startRound() {
+  startRound(targetScore?: number) {
+    if (targetScore) this.targetScore = targetScore;
     if (this.players.length !== 4) throw new Error("Need exactly 4 players");
     this.state = 'BIDDING';
     this.deck.initialize();
@@ -188,10 +190,10 @@ export class TarneebGame implements Game {
     }
 
     // Target score to win
-    if (this.team1Score >= 39 || this.team2Score >= 39) {
+    if (this.team1Score >= this.targetScore || this.team2Score >= this.targetScore) {
       this.state = 'FINISHED';
     } else {
-      this.startRound();
+      this.startRound(this.targetScore);
     }
   }
 
