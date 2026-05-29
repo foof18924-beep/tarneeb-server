@@ -77,10 +77,7 @@ export class RoomManager {
       this.io.emit('global_alert', { message: data.message });
       return;
     } else if (event === 'admin_get_stats') {
-      let totalPlayers = 0;
-      for (const players of this.rooms.values()) {
-        totalPlayers += players.length;
-      }
+      const totalPlayers = this.io.engine.clientsCount;
       socket.emit('admin_stats', { activeRooms: this.games.size, totalPlayers });
       return;
     } else if (event === 'admin_set_target_score') {
