@@ -134,7 +134,7 @@ export class RoomManager {
       return;
     }
 
-    const endTime = Date.now() + 10000; // 10 seconds
+    const endTime = Date.now() + 20000; // 20 seconds
     this.turnEndTimes.set(roomCode, endTime);
 
     const timeout = setTimeout(() => {
@@ -143,7 +143,7 @@ export class RoomManager {
         g.handleTimeout();
         this.broadcastGameState(roomCode);
       }
-    }, 10000);
+    }, 20000);
 
     this.timers.set(roomCode, timeout);
   }
@@ -163,10 +163,8 @@ export class RoomManager {
         highestBidderIndex: game.highestBidderIndex,
         trumpSuit: game.trumpSuit,
         currentTurnIndex: game.currentTurnIndex,
-        team1Tricks: game.team1Tricks,
-        team2Tricks: game.team2Tricks,
-        team1Score: game.team1Score,
-        team2Score: game.team2Score,
+        playerTricks: game.playerTricks,
+        playerScores: game.playerScores,
         targetScore: game.targetScore,
         currentTrick: game.currentTrick,
         myIndex: index,

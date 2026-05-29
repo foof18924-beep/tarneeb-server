@@ -17,12 +17,10 @@ export class TarneebGame implements Game {
   public currentTurnIndex: number = 0;
   private consecutivePasses: number = 0;
   
-  // Teams: Team 1 (Player 0, 2) vs Team 2 (Player 1, 3)
-  public team1Tricks: number = 0;
-  public team2Tricks: number = 0;
+  // Individual Tarneeb (Yahudi)
+  public playerTricks: number[] = [0, 0, 0, 0];
+  public playerScores: number[] = [0, 0, 0, 0];
   
-  public team1Score: number = 0;
-  public team2Score: number = 0;
   public targetScore: number = 39;
 
   public currentTrick: { playerIndex: number, card: Card }[] = [];
@@ -56,8 +54,7 @@ export class TarneebGame implements Game {
     this.highestBidderIndex = -1;
     this.currentTurnIndex = 0;
     this.consecutivePasses = 0;
-    this.team1Tricks = 0;
-    this.team2Tricks = 0;
+    this.playerTricks = [0, 0, 0, 0];
     this.trumpSuit = null;
     this.currentTrick = [];
     this.leadSuit = null;
@@ -148,12 +145,7 @@ export class TarneebGame implements Game {
     }
 
     const winnerIndex = winningPlay.playerIndex;
-    
-    if (winnerIndex === 0 || winnerIndex === 2) {
-      this.team1Tricks++;
-    } else {
-      this.team2Tricks++;
-    }
+    this.playerTricks[winnerIndex]++;
 
     this.tricksPlayed++;
     
@@ -167,30 +159,24 @@ export class TarneebGame implements Game {
   }
 
   private resolveRound() {
-    // Calculate scores based on the bid
-    const team1Bid = (this.highestBidderIndex === 0 || this.highestBidderIndex === 2) ? this.currentBid : 0;
-    const team2Bid = (this.highestBidderIndex === 1 || this.highestBidderIndex === 3) ? this.currentBid : 0;
+    const bidderBid = this.currentBid;
+    const bidderTricks = this.playerTricks[this.highestBidderIndex];
 
-    if (team1Bid > 0) {
-      if (this.team1Tricks >= team1Bid) {
-        const points = team1Bid >= 7 ? this.team1Tricks * 2 : this.team1Tricks;
-        this.team1Score += points;
+    for (let i = 0; i < 4; i++) {
+      if (i === this.highestBidderIndex) {
+        if (bidderTricks >= bidderBid) {
+          const points = bidderBid >= 7 ? bidderBid * 2 : bidderBid;
+          this.playerScores[i] += points;
+        } else {
+          this.playerScores[i] -= bidderBid;
+        }
       } else {
-        this.team1Score -= team1Bid;
+        this.playerScores[i] += this.playerTricks[i];
       }
-      this.team2Score += this.team2Tricks;
-    } else {
-      if (this.team2Tricks >= team2Bid) {
-        const points = team2Bid >= 7 ? this.team2Tricks * 2 : this.team2Tricks;
-        this.team2Score += points;
-      } else {
-        this.team2Score -= team2Bid;
-      }
-      this.team1Score += this.team1Tricks;
     }
 
     // Target score to win
-    if (this.team1Score >= this.targetScore || this.team2Score >= this.targetScore) {
+    if (this.playerScores.some(score => score >= this.targetScore)) {
       this.state = 'FINISHED';
     } else {
       this.startRound(this.targetScore);
