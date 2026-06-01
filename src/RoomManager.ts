@@ -310,7 +310,8 @@ export class RoomManager {
           },
           android: {
             notification: {
-              sound: 'default'
+              sound: 'default',
+              channel_id: 'default'
             }
           }
         }
