@@ -96,6 +96,9 @@ export class RoomManager {
     } else if (event === 'admin_send_fcm') {
       this.handleAdminSendFcm(socket, data);
       return;
+    } else if (event === 'register_fcm_token') {
+      this.subscribeTokenToTopic(data.token, 'all');
+      return;
     } else if (event === 'leave_room') {
        this.handleDisconnect(socket);
        return;
@@ -384,5 +387,56 @@ export class RoomManager {
         reject(e);
       }
     });
+  }
+
+  async subscribeTokenToTopic(token: string, topic: string) {
+    if (!token) return;
+
+    let serviceAccount: any = null;
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const localKeyPath = path.join(__dirname, '..', 'service-account.json');
+      if (fs.existsSync(localKeyPath)) {
+        serviceAccount = JSON.parse(fs.readFileSync(localKeyPath, 'utf8'));
+      }
+    } catch (err) {
+      console.error('Failed to load local service-account.json:', err);
+    }
+
+    if (!serviceAccount && process.env.FCM_SERVICE_ACCOUNT) {
+      try {
+        serviceAccount = JSON.parse(process.env.FCM_SERVICE_ACCOUNT);
+      } catch (err) {
+        console.error('Failed to parse FCM_SERVICE_ACCOUNT env var:', err);
+      }
+    }
+
+    if (!serviceAccount) {
+      console.error('No service account found to subscribe token to topic');
+      return;
+    }
+
+    try {
+      const accessToken = await this.getFcmAccessToken(serviceAccount);
+      const url = 'https://iid.googleapis.com/iid/v1:batchAdd';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'access_token_auth': 'true'
+        },
+        body: JSON.stringify({
+          to: `/topics/${topic}`,
+          registration_tokens: [token]
+        })
+      });
+
+      const responseData = await response.json() as any;
+      console.log(`FCM Topic subscription response for ${topic}:`, responseData);
+    } catch (err) {
+      console.error('FCM Topic subscription failed:', err);
+    }
   }
 }
