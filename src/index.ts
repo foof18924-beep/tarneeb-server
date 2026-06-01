@@ -49,6 +49,7 @@ io.on('connection', (socket) => {
   socket.on('admin_set_target_score', (data) => roomManager.handleGameEvent(socket, 'admin_set_target_score', data));
   socket.on('admin_set_prize', (data) => roomManager.handleGameEvent(socket, 'admin_set_prize', data));
   socket.on('admin_test_room', (data) => roomManager.handleGameEvent(socket, 'admin_test_room', data));
+  socket.on('admin_send_fcm', (data) => roomManager.handleGameEvent(socket, 'admin_send_fcm', data));
 
   // WebRTC Signaling
   socket.on('webrtc_offer', (data) => {

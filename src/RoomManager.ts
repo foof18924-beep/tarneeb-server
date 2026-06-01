@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { TarneebGame } from './engine/TarneebGame';
 import { Player } from './engine/Player';
+import crypto from 'crypto';
 
 export class RoomManager {
   private rooms: Map<string, any[]> = new Map(); // roomCode -> players[]
@@ -91,6 +92,9 @@ export class RoomManager {
       return;
     } else if (event === 'admin_test_room') {
       this.adminTestRoom(socket, data.username, data.uid);
+      return;
+    } else if (event === 'admin_send_fcm') {
+      this.handleAdminSendFcm(socket, data);
       return;
     } else if (event === 'leave_room') {
        this.handleDisconnect(socket);
@@ -248,5 +252,137 @@ export class RoomManager {
         break;
       }
     }
+  }
+
+  async handleAdminSendFcm(socket: Socket, data: any) {
+    let { serviceAccount, title, body, topic } = data;
+
+    // Load from environment variable or local service-account.json file if not provided by the client
+    if (!serviceAccount) {
+      if (process.env.FCM_SERVICE_ACCOUNT) {
+        try {
+          serviceAccount = JSON.parse(process.env.FCM_SERVICE_ACCOUNT);
+        } catch (err) {
+          console.error('Failed to parse FCM_SERVICE_ACCOUNT env var:', err);
+        }
+      }
+      
+      // Fallback to local file if environment variable is not set
+      if (!serviceAccount) {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const localKeyPath = path.join(__dirname, '..', 'service-account.json');
+          if (fs.existsSync(localKeyPath)) {
+            serviceAccount = JSON.parse(fs.readFileSync(localKeyPath, 'utf8'));
+          }
+        } catch (err) {
+          console.error('Failed to load local service-account.json:', err);
+        }
+      }
+    }
+
+    if (!serviceAccount || !title || !body) {
+      socket.emit('admin_fcm_response', { success: false, error: 'الرجاء إدخال جميع الحقول المطلوبة (ملف الخدمة، العنوان، النص)' });
+      return;
+    }
+
+    try {
+      const sa = typeof serviceAccount === 'string' ? JSON.parse(serviceAccount) : serviceAccount;
+      if (!sa.project_id || !sa.client_email || !sa.private_key) {
+        throw new Error('ملف الخدمة JSON غير صالح. يجب أن يحتوي على project_id و client_email و private_key.');
+      }
+
+      // Generate access token
+      const accessToken = await this.getFcmAccessToken(sa);
+
+      // Send push notification via FCM HTTP v1
+      const fcmUrl = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+      const fcmMessage = {
+        message: {
+          topic: topic || 'all',
+          notification: {
+            title: title,
+            body: body
+          },
+          android: {
+            notification: {
+              sound: 'default'
+            }
+          }
+        }
+      };
+
+      const response = await fetch(fcmUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(fcmMessage)
+      });
+
+      const responseData = await response.json() as any;
+
+      if (response.ok) {
+        socket.emit('admin_fcm_response', { success: true, messageId: responseData.name });
+      } else {
+        const errorMsg = responseData.error?.message || JSON.stringify(responseData);
+        socket.emit('admin_fcm_response', { success: false, error: `خطأ من جوجل: ${errorMsg}` });
+      }
+    } catch (err: any) {
+      console.error('FCM Error:', err);
+      socket.emit('admin_fcm_response', { success: false, error: err.message || 'حدث خطأ غير متوقع أثناء إرسال الإشعار.' });
+    }
+  }
+
+  private getFcmAccessToken(serviceAccount: any): Promise<string> {
+    return new Promise((resolve, reject) => {
+      try {
+        const header = { alg: 'RS256', typ: 'JWT' };
+        const now = Math.floor(Date.now() / 1000);
+        const payload = {
+          iss: serviceAccount.client_email,
+          scope: 'https://www.googleapis.com/auth/firebase.messaging',
+          aud: 'https://oauth2.googleapis.com/token',
+          exp: now + 3600,
+          iat: now
+        };
+
+        const base64Header = Buffer.from(JSON.stringify(header)).toString('base64url');
+        const base64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
+        const signatureInput = `${base64Header}.${base64Payload}`;
+
+        const sign = crypto.createSign('RSA-SHA256');
+        sign.update(signatureInput);
+        const signature = sign.sign(serviceAccount.private_key, 'base64url');
+
+        const jwt = `${signatureInput}.${signature}`;
+
+        const body = new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion: jwt
+        }).toString();
+
+        fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: body
+        })
+        .then(res => res.json())
+        .then((data: any) => {
+          if (data.access_token) {
+            resolve(data.access_token);
+          } else {
+            reject(new Error(data.error_description || data.error || 'Failed to obtain access token'));
+          }
+        })
+        .catch(err => reject(err));
+      } catch (e) {
+        reject(e);
+      }
+    });
   }
 }
