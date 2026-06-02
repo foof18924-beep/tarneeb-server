@@ -198,9 +198,9 @@ export class TarneebGame implements Game {
         } else {
           this.playerScores[0] -= bidderBid;
           this.playerScores[2] -= bidderBid;
+          this.playerScores[1] += teamBTricks;
+          this.playerScores[3] += teamBTricks;
         }
-        this.playerScores[1] += teamBTricks;
-        this.playerScores[3] += teamBTricks;
       } else {
         if (teamBTricks >= bidderBid) {
           const pointsWon = teamBTricks;
@@ -209,9 +209,9 @@ export class TarneebGame implements Game {
         } else {
           this.playerScores[1] -= bidderBid;
           this.playerScores[3] -= bidderBid;
+          this.playerScores[0] += teamATricks;
+          this.playerScores[2] += teamATricks;
         }
-        this.playerScores[0] += teamATricks;
-        this.playerScores[2] += teamATricks;
       }
     } else {
       for (let i = 0; i < 4; i++) {
