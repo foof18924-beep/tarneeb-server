@@ -8,8 +8,10 @@ export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 
 export class TarneebGame implements Game {
   public players: Player[] = [];
   public state: GameState = 'WAITING';
+  public gameMode: 'INDIVIDUAL' | 'PARTNERSHIP' = 'INDIVIDUAL';
   public deck: Deck;
   
+  public dealerIndex: number = 3; // Start with player 3 as dealer, so player 0 bids first
   public currentBid: number = 2; // minimum valid bid is 3
   public highestBidderIndex: number = -1;
   public trumpSuit: Suit | null = null;
@@ -50,9 +52,12 @@ export class TarneebGame implements Game {
       this.players[i].addCards(this.deck.deal(13));
     }
     
-    this.currentBid = 2; // minimum bid is 3
+    // Rotate dealer
+    this.dealerIndex = (this.dealerIndex + 1) % 4;
+    
+    this.currentBid = this.gameMode === 'PARTNERSHIP' ? 6 : 2;
     this.highestBidderIndex = -1;
-    this.currentTurnIndex = 0;
+    this.currentTurnIndex = (this.dealerIndex + 1) % 4; // Bidding starts next to dealer
     this.consecutivePasses = 0;
     this.playerTricks = [0, 0, 0, 0];
     this.trumpSuit = null;
@@ -67,20 +72,27 @@ export class TarneebGame implements Game {
     if (bid === 'PASS') {
       this.consecutivePasses++;
     } else {
-      if (bid > this.currentBid && bid <= 13) {
+      const minBid = this.gameMode === 'PARTNERSHIP' ? 7 : 3;
+      if (bid >= minBid && bid > this.currentBid && bid <= 13) {
         this.currentBid = bid;
         this.highestBidderIndex = playerIndex;
         this.consecutivePasses = 0;
+      } else {
+        return; // Invalid bid
       }
     }
     
     if (this.consecutivePasses >= 3 || this.currentBid === 13) {
       if (this.highestBidderIndex === -1) {
-        this.startRound(); // redeal
+        this.startRound(this.targetScore); // redeal
         return;
       }
-      this.trumpSuit = 'Hearts';
-      this.state = 'PLAYING';
+      if (this.gameMode === 'PARTNERSHIP') {
+        this.state = 'SELECTING_TRUMP';
+      } else {
+        this.trumpSuit = 'Hearts';
+        this.state = 'PLAYING';
+      }
       this.currentTurnIndex = this.highestBidderIndex;
     } else {
       this.currentTurnIndex = (this.currentTurnIndex + 1) % 4;
@@ -88,7 +100,10 @@ export class TarneebGame implements Game {
   }
 
   selectTrump(playerIndex: number, suit: Suit) {
-    // Deprecated since Trump is fixed to Hearts
+    if (this.state !== 'SELECTING_TRUMP' || playerIndex !== this.highestBidderIndex) return;
+    this.trumpSuit = suit;
+    this.state = 'PLAYING';
+    this.currentTurnIndex = this.highestBidderIndex;
   }
 
   playCard(playerIndex: number, cardIndex: number) {
@@ -163,16 +178,49 @@ export class TarneebGame implements Game {
     const bidderBid = this.currentBid;
     const bidderTricks = this.playerTricks[this.highestBidderIndex];
 
-    for (let i = 0; i < 4; i++) {
-      if (i === this.highestBidderIndex) {
-        if (bidderTricks >= bidderBid) {
-          const points = bidderBid >= 7 ? bidderBid * 2 : bidderBid;
-          this.playerScores[i] += points;
+    if (this.gameMode === 'PARTNERSHIP') {
+      // Team A: Player 0 and 2
+      // Team B: Player 1 and 3
+      const teamATricks = this.playerTricks[0] + this.playerTricks[2];
+      const teamBTricks = this.playerTricks[1] + this.playerTricks[3];
+
+      const biddingTeam = [0, 2].includes(this.highestBidderIndex) ? 'A' : 'B';
+      
+      if (biddingTeam === 'A') {
+        if (teamATricks >= bidderBid) {
+          const pointsWon = teamATricks;
+          this.playerScores[0] += pointsWon;
+          this.playerScores[2] += pointsWon;
         } else {
-          this.playerScores[i] -= bidderBid;
+          this.playerScores[0] -= bidderBid;
+          this.playerScores[2] -= bidderBid;
         }
+        this.playerScores[1] += teamBTricks;
+        this.playerScores[3] += teamBTricks;
       } else {
-        this.playerScores[i] += this.playerTricks[i];
+        if (teamBTricks >= bidderBid) {
+          const pointsWon = teamBTricks;
+          this.playerScores[1] += pointsWon;
+          this.playerScores[3] += pointsWon;
+        } else {
+          this.playerScores[1] -= bidderBid;
+          this.playerScores[3] -= bidderBid;
+        }
+        this.playerScores[0] += teamATricks;
+        this.playerScores[2] += teamATricks;
+      }
+    } else {
+      for (let i = 0; i < 4; i++) {
+        if (i === this.highestBidderIndex) {
+          if (bidderTricks >= bidderBid) {
+            const points = bidderBid >= 7 ? bidderBid * 2 : bidderBid;
+            this.playerScores[i] += points;
+          } else {
+            this.playerScores[i] -= bidderBid;
+          }
+        } else {
+          this.playerScores[i] += this.playerTricks[i];
+        }
       }
     }
 
@@ -187,6 +235,22 @@ export class TarneebGame implements Game {
   public handleTimeout() {
     if (this.state === 'BIDDING') {
       this.placeBid(this.currentTurnIndex, 'PASS');
+    } else if (this.state === 'SELECTING_TRUMP') {
+      // Choose the suit the player has the most cards in
+      const bidder = this.players[this.highestBidderIndex];
+      const suitCounts: Record<Suit, number> = { Hearts: 0, Diamonds: 0, Clubs: 0, Spades: 0 };
+      bidder.cards.forEach(c => {
+        suitCounts[c.suit]++;
+      });
+      let bestSuit: Suit = 'Hearts';
+      let maxCount = 0;
+      (Object.keys(suitCounts) as Suit[]).forEach(suit => {
+        if (suitCounts[suit] > maxCount) {
+          maxCount = suitCounts[suit];
+          bestSuit = suit;
+        }
+      });
+      this.selectTrump(this.highestBidderIndex, bestSuit);
     } else if (this.state === 'PLAYING') {
       const player = this.players[this.currentTurnIndex];
       // Find a valid card to play

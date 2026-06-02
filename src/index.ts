@@ -2,10 +2,21 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import https from 'https';
 import { RoomManager } from './RoomManager';
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
+// Health check endpoint for Render.com
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (_req, res) => {
+  res.status(200).json({ message: 'Tarneeb Server is running 🃏', status: 'online' });
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -25,8 +36,8 @@ io.on('connection', (socket) => {
     roomManager.joinRoom(socket, username, roomCode);
   });
 
-  socket.on('auto_match', ({ username, uid }) => {
-    roomManager.autoMatch(socket, username, uid);
+  socket.on('auto_match', ({ username, uid, gameMode }) => {
+    roomManager.autoMatch(socket, username, uid, gameMode);
   });
 
   socket.on('disconnect', () => {
@@ -42,6 +53,25 @@ io.on('connection', (socket) => {
   socket.on('play_card', (data) => roomManager.handleGameEvent(socket, 'play_card', data));
   socket.on('play_again', (data) => roomManager.handleGameEvent(socket, 'play_again', data));
   socket.on('leave_room', (data) => roomManager.handleGameEvent(socket, 'leave_room', data));
+  
+  socket.on('send_emoji', (data) => {
+    if (data && data.roomCode) {
+      socket.to(data.roomCode).emit('emoji_received', {
+        senderIndex: data.senderIndex,
+        targetIndex: data.targetIndex,
+        emoji: data.emoji
+      });
+    }
+  });
+  
+  socket.on('send_chat_bubble', (data) => {
+    if (data && data.roomCode) {
+      socket.to(data.roomCode).emit('chat_bubble_received', {
+        senderIndex: data.senderIndex,
+        text: data.text
+      });
+    }
+  });
   
   // Admin events
   socket.on('admin_broadcast', (data) => roomManager.handleGameEvent(socket, 'admin_broadcast', data));
@@ -74,6 +104,23 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL || '';
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  
+  // Self-ping every 14 minutes to prevent Render.com free tier from sleeping
+  // Render spins down after 15 minutes of inactivity
+  if (RENDER_URL) {
+    const pingInterval = 14 * 60 * 1000; // 14 minutes
+    setInterval(() => {
+      const url = `${RENDER_URL}/health`;
+      https.get(url, (res) => {
+        console.log(`[Keep-Alive] Pinged ${url} - Status: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.error('[Keep-Alive] Ping failed:', err.message);
+      });
+    }, pingInterval);
+    console.log(`[Keep-Alive] Self-ping enabled every 14 minutes -> ${RENDER_URL}/health`);
+  }
 });

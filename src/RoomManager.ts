@@ -5,6 +5,7 @@ import crypto from 'crypto';
 
 export class RoomManager {
   private rooms: Map<string, any[]> = new Map(); // roomCode -> players[]
+  private roomModes: Map<string, 'INDIVIDUAL' | 'PARTNERSHIP'> = new Map(); // roomCode -> gameMode
   private games: Map<string, TarneebGame> = new Map(); // roomCode -> game instance
   private timers: Map<string, NodeJS.Timeout> = new Map();
   private turnEndTimes: Map<string, number> = new Map();
@@ -32,10 +33,11 @@ export class RoomManager {
     });
   }
 
-  autoMatch(socket: Socket, username: string, uid: string) {
+  autoMatch(socket: Socket, username: string, uid: string, gameMode: 'INDIVIDUAL' | 'PARTNERSHIP' = 'PARTNERSHIP') {
     let targetRoom = '';
     for (const [roomCode, players] of this.rooms.entries()) {
-      if (players.length < 4) {
+      const mode = this.roomModes.get(roomCode) || 'PARTNERSHIP';
+      if (players.length < 4 && mode === gameMode) {
         targetRoom = roomCode;
         break;
       }
@@ -44,6 +46,7 @@ export class RoomManager {
     if (!targetRoom) {
       targetRoom = Math.random().toString(36).substring(2, 8).toUpperCase();
       this.rooms.set(targetRoom, []);
+      this.roomModes.set(targetRoom, gameMode);
     }
     
     socket.join(targetRoom);
@@ -53,7 +56,7 @@ export class RoomManager {
         room.push({ id: socket.id, username, uid });
     }
     
-    console.log(`${username} auto-matched into room ${targetRoom} (${room.length}/4)`);
+    console.log(`${username} auto-matched into room ${targetRoom} (${room.length}/4) - mode: ${gameMode}`);
     
     this.io.to(targetRoom).emit('room_update', {
       roomCode: targetRoom,
@@ -62,6 +65,7 @@ export class RoomManager {
     
     if (room.length === 4 && !this.games.has(targetRoom)) {
         const game = new TarneebGame();
+        game.gameMode = gameMode;
         room.forEach(p => game.addPlayer(new Player(p.id, p.username)));
         game.startRound(this.globalTargetScore);
         this.games.set(targetRoom, game);
@@ -80,7 +84,18 @@ export class RoomManager {
       return;
     } else if (event === 'admin_get_stats') {
       const totalPlayers = this.io.engine.clientsCount;
-      socket.emit('admin_stats', { activeRooms: this.games.size, totalPlayers });
+      let partnershipRooms = 0;
+      let individualRooms = 0;
+      for (const game of this.games.values()) {
+        if (game.gameMode === 'PARTNERSHIP') partnershipRooms++;
+        else individualRooms++;
+      }
+      socket.emit('admin_stats', {
+        activeRooms: this.games.size,
+        partnershipRooms,
+        individualRooms,
+        totalPlayers
+      });
       return;
     } else if (event === 'admin_set_target_score') {
       this.globalTargetScore = data.targetScore;
@@ -91,9 +106,8 @@ export class RoomManager {
       this.io.emit('prize_update', { prizeValue: this.globalPrize });
       return;
     } else if (event === 'admin_test_room') {
-      this.adminTestRoom(socket, data.username, data.uid);
+      this.adminTestRoom(socket, data.username, data.uid, data.gameMode);
       return;
-
     } else if (event === 'leave_room') {
        this.handleDisconnect(socket);
        return;
@@ -171,9 +185,10 @@ export class RoomManager {
     }
   }
 
-  adminTestRoom(socket: Socket, username: string, uid: string) {
+  adminTestRoom(socket: Socket, username: string, uid: string, gameMode: 'INDIVIDUAL' | 'PARTNERSHIP' = 'PARTNERSHIP') {
     const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     this.rooms.set(roomCode, []);
+    this.roomModes.set(roomCode, gameMode);
     socket.join(roomCode);
     
     const room = this.rooms.get(roomCode)!;
@@ -188,6 +203,7 @@ export class RoomManager {
     });
     
     const game = new TarneebGame();
+    game.gameMode = gameMode;
     room.forEach(p => game.addPlayer(new Player(p.id, p.username)));
     game.startRound(this.globalTargetScore);
     
@@ -211,6 +227,7 @@ export class RoomManager {
         highestBidderIndex: game.highestBidderIndex,
         trumpSuit: game.trumpSuit,
         currentTurnIndex: game.currentTurnIndex,
+        dealerIndex: game.dealerIndex,
         playerTricks: game.playerTricks,
         playerScores: game.playerScores,
         targetScore: game.targetScore,
@@ -218,7 +235,8 @@ export class RoomManager {
         myIndex: index,
         myHand: game.players[index].cards,
         players: game.players.map(pl => ({ name: pl.name, cardCount: pl.cards.length })),
-        turnEndTime
+        turnEndTime,
+        gameMode: game.gameMode
       };
       
       this.io.to(p.id).emit('game_state_update', state);
@@ -244,6 +262,7 @@ export class RoomManager {
         const humanPlayers = players.filter(p => !p.id.startsWith('BOT_'));
         if (humanPlayers.length === 0) {
           this.rooms.delete(roomCode);
+          this.roomModes.delete(roomCode);
           this.timers.delete(roomCode);
           this.turnEndTimes.delete(roomCode);
         }
