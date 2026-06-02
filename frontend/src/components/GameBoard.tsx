@@ -974,6 +974,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
             </div>
           )}
 
+          {/* Waiting for new player (PAUSED_WAITING_FOR_PLAYERS) */}
+          {gameState && gameState.state === 'PAUSED_WAITING_FOR_PLAYERS' && (
+            <div style={{ position: 'absolute', zIndex: 2000, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(12px)', padding: '25px 30px', borderRadius: '24px', textAlign: 'center', border: '2px solid #3498db', boxShadow: '0 15px 45px rgba(0,0,0,0.8)', width: '90%', maxWidth: '380px' }}>
+              <div className="spinner" style={{ width: '40px', height: '40px', border: '4px solid rgba(255,255,255,0.1)', borderTop: '4px solid #3498db', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 15px auto' }}></div>
+              <h3 style={{ color: '#3498db', fontSize: '18px', margin: '0 0 10px 0', fontWeight: 'bold' }}>⏳ بانتظار لاعب حقيقي جديد...</h3>
+              <p style={{ color: '#ccc', fontSize: '13px', margin: 0, lineHeight: '1.6', direction: 'rtl' }}>
+                لقد غادر أحد اللاعبين الجولة. قام البوت بإكمال اللعب نيابة عنه حتى انتهت الأوراق، وننتظر الآن انضمام لاعب حقيقي جديد لمواصلة اللعب!
+              </p>
+            </div>
+          )}
+
           {/* Players */}
           {gameState.players.map((p: any, idx: number) => {
             const posClass = getPositionClass(idx, gameState.myIndex);

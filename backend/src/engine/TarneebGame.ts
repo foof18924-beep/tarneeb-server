@@ -3,7 +3,7 @@ import { Player } from './Player';
 import { Card, Suit } from './Card';
 import { Game } from './Game';
 
-export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 'TRICK_END' | 'FINISHED';
+export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 'TRICK_END' | 'FINISHED' | 'PAUSED_WAITING_FOR_PLAYERS';
 
 export class TarneebGame implements Game {
   public players: Player[] = [];
@@ -232,7 +232,12 @@ export class TarneebGame implements Game {
     if (this.playerScores.some(score => score >= this.targetScore)) {
       this.state = 'FINISHED';
     } else {
-      this.startRound(this.targetScore);
+      const hasVacantBot = this.players.some(p => p.id.startsWith('BOT_VACANT_'));
+      if (hasVacantBot) {
+        this.state = 'PAUSED_WAITING_FOR_PLAYERS';
+      } else {
+        this.startRound(this.targetScore);
+      }
     }
   }
 

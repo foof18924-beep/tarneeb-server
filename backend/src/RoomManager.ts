@@ -37,7 +37,8 @@ export class RoomManager {
     let targetRoom = '';
     for (const [roomCode, players] of this.rooms.entries()) {
       const mode = this.roomModes.get(roomCode) || 'PARTNERSHIP';
-      if (players.length < 4 && mode === gameMode) {
+      const hasVacant = players.some(p => p.id.startsWith('BOT_VACANT_'));
+      if (mode === gameMode && (players.length < 4 || hasVacant)) {
         targetRoom = roomCode;
         break;
       }
@@ -52,8 +53,26 @@ export class RoomManager {
     socket.join(targetRoom);
     const room = this.rooms.get(targetRoom)!;
     
-    if (!room.find(p => p.id === socket.id)) {
+    const isAlreadyIn = room.find(p => p.id === socket.id);
+    if (!isAlreadyIn) {
+      const vacantIndex = room.findIndex(p => p.id.startsWith('BOT_VACANT_'));
+      if (vacantIndex !== -1) {
+        room[vacantIndex] = { id: socket.id, username, uid };
+        
+        // Also update in active game if exists
+        const game = this.games.get(targetRoom);
+        if (game) {
+          game.players[vacantIndex].id = socket.id;
+          game.players[vacantIndex].name = username;
+          
+          const stillHasVacant = game.players.some(p => p.id.startsWith('BOT_VACANT_'));
+          if (!stillHasVacant && game.state === 'PAUSED_WAITING_FOR_PLAYERS') {
+            game.startRound(this.globalTargetScore);
+          }
+        }
+      } else if (room.length < 4) {
         room.push({ id: socket.id, username, uid });
+      }
     }
     
     console.log(`${username} auto-matched into room ${targetRoom} (${room.length}/4) - mode: ${gameMode}`);
@@ -70,6 +89,9 @@ export class RoomManager {
         game.startRound(this.globalTargetScore);
         this.games.set(targetRoom, game);
         this.io.to(targetRoom).emit('game_start', { message: 'بدأت اللعبة!' });
+        this.broadcastGameState(targetRoom);
+    } else {
+        // Broadcast the updated state to everyone (including the newly joined human)
         this.broadcastGameState(targetRoom);
     }
   }
@@ -151,7 +173,7 @@ export class RoomManager {
     }
 
     const game = this.games.get(roomCode);
-    if (!game || game.state === 'FINISHED') {
+    if (!game || game.state === 'FINISHED' || game.state === 'PAUSED_WAITING_FOR_PLAYERS') {
       this.turnEndTimes.delete(roomCode);
       return;
     }
@@ -248,24 +270,47 @@ export class RoomManager {
     for (const [roomCode, players] of this.rooms.entries()) {
       const index = players.findIndex(p => p.id === socket.id);
       if (index !== -1) {
-        players.splice(index, 1);
-        this.io.to(roomCode).emit('room_update', {
-          roomCode,
-          players
-        });
+        let shouldRemove = true;
         
         if (this.games.has(roomCode)) {
-           this.io.to(roomCode).emit('game_state_update', { state: 'PLAYER_DISCONNECTED' });
-           this.games.delete(roomCode);
-           if (this.timers.has(roomCode)) clearTimeout(this.timers.get(roomCode));
+          const game = this.games.get(roomCode)!;
+          if (game.state !== 'FINISHED') {
+            // Replace with a vacant bot so the bot continues to play
+            players[index].id = `BOT_VACANT_${index}_${roomCode}`;
+            players[index].username = `لاعب بديل (بوت)`;
+            game.players[index].id = `BOT_VACANT_${index}_${roomCode}`;
+            game.players[index].name = `لاعب بديل (بوت)`;
+            
+            shouldRemove = false;
+            
+            this.io.to(roomCode).emit('room_update', {
+              roomCode,
+              players
+            });
+            this.broadcastGameState(roomCode);
+            this.checkTrickEnd(roomCode);
+          } else {
+            this.games.delete(roomCode);
+            if (this.timers.has(roomCode)) clearTimeout(this.timers.get(roomCode));
+          }
+        }
+        
+        if (shouldRemove) {
+          players.splice(index, 1);
+          this.io.to(roomCode).emit('room_update', {
+            roomCode,
+            players
+          });
         }
 
         const humanPlayers = players.filter(p => !p.id.startsWith('BOT_'));
         if (humanPlayers.length === 0) {
           this.rooms.delete(roomCode);
           this.roomModes.delete(roomCode);
+          if (this.timers.has(roomCode)) clearTimeout(this.timers.get(roomCode));
           this.timers.delete(roomCode);
           this.turnEndTimes.delete(roomCode);
+          this.games.delete(roomCode);
         }
         break;
       }
