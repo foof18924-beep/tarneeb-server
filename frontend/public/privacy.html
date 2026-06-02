@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الطرنيب - سياسة الخصوصية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #27ae60;
+            --primary-hover: #2ecc71;
+            --bg-gradient: radial-gradient(circle at center, #0a1f10 0%, #030a05 100%);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(39, 174, 96, 0.2);
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin: 40px 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 20px;
+        }
+
+        .logo-placeholder {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px var(--primary-color));
+        }
+
+        h1 {
+            font-size: 26px;
+            color: var(--primary-hover);
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #fff;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            border-right: 4px solid var(--primary-color);
+            padding-right: 10px;
+        }
+
+        p, li {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        ul {
+            margin-right: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .lang-switch {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .en-content {
+            display: none;
+        }
+
+        body.en {
+            direction: ltr;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body.en h2 {
+            border-right: none;
+            border-left: 4px solid var(--primary-color);
+            padding-right: 0;
+            padding-left: 10px;
+        }
+
+        body.en ul {
+            margin-right: 0;
+            margin-left: 20px;
+        }
+
+        .link-highlight {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="lang-switch">
+            <button class="lang-btn" id="langToggle">English</button>
+        </div>
+
+        <div class="header">
+            <div class="logo-placeholder">🃏</div>
+            <h1 class="ar-content">تحدي الطرنيب</h1>
+            <h1 class="en-content">Tarneeb Challenge</h1>
+            <p class="ar-content">سياسة الخصوصية - Privacy Policy</p>
+            <p class="en-content">Last Updated: June 2026</p>
+        </div>
+
+        <!-- Arabic Policy Content -->
+        <div class="ar-content">
+            <p>تُبين سياسة الخصوصية هذه كيفية جمع واستخدام وحماية بياناتك عند استخدام لعبة <strong>"تحدي الطرنيب"</strong>. نحن نلتزم باحترام خصوصيتك وتأمين بياناتك الشخصية بالكامل.</p>
+
+            <h2>1. البيانات التي نجمعها 📊</h2>
+            <p>نقوم بجمع ومعالجة المعلومات التالية لضمان تشغيل اللعبة بكفاءة:</p>
+            <ul>
+                <li><strong>بيانات الحساب:</strong> البريد الإلكتروني، اسم اللاعب المستعار (Username)، وكلمة المرور المشفرة لتأمين تسجيل الدخول.</li>
+                <li><strong>إحصائيات اللعب:</strong> عدد الجولات، الفوز والخسارة، النقاط، والمراكز المحققة في لوحة المتصدرين لتنظيم منافسات الجائزة الكبرى.</li>
+                <li><strong>بيانات الاشتراك:</strong> معلومات حالة اشتراك الـ VIP الخاص بك والتحقق من صحته من خلال متاجر التطبيقات الرسمية.</li>
+            </ul>
+
+            <h2>2. كيف نستخدم بياناتك ⚙️</h2>
+            <p>نستخدم البيانات التي نجمعها للأغراض التالية فقط:</p>
+            <ul>
+                <li>إنشاء وتأمين حسابات اللاعبين وتقديم تجربة لعب جماعية مستقرة (Multiplayer).</li>
+                <li>إدارة وحساب النقاط وتحديث لوحات المتصدرين وتحديد الفائزين بالجوائز.</li>
+                <li>توفير وتفعيل ميزات الـ VIP للاشتراكات الشهرية والسنوية.</li>
+                <li>تقديم الدعم الفني وحل المشاكل التقنية للعبة.</li>
+            </ul>
+
+            <h2>3. مشاركة وحماية البيانات 🔒</h2>
+            <ul>
+                <li><strong>عدم بيع البيانات:</strong> نحن لا نبيع ولا نتاجر بكامل بياناتك الشخصية لأي جهات إعلانية أو أطراف خارجية.</li>
+                <li><strong>مزودو الخدمات:</strong> نستخدم خدمات آمنة معتمدة مثل **Firebase Firestore / Auth** (من شركة Google) لإدارة وتخزين البيانات بشكل مشفر وحمايتها من الاختراقات.</li>
+            </ul>
+
+            <h2>4. حقوقك وإمكانية حذف البيانات 🗑️</h2>
+            <p>يحق لك دائماً معرفة البيانات التي نحتفظ بها، أو تعديلها، كما نوفر لك حق حذف حسابك نهائياً وكافة البيانات المرتبطة به في أي وقت.</p>
+            <p>يمكنك تقديم طلب حذف حسابك مباشرة وبسهولة من خلال زيارة صفحة: <a href="delete-account.html" class="link-highlight">طلب حذف الحساب والبيانات</a>.</p>
+
+            <h2>5. الاتصال بنا ✉️</h2>
+            <p>إذا كانت لديك أي استفسارات حول سياسة الخصوصية هذه أو كيفية التعامل مع بياناتك، يرجى التواصل معنا عبر البريد الإلكتروني للدعم الفني.</p>
+        </div>
+
+        <!-- English Policy Content -->
+        <div class="en-content">
+            <p>This Privacy Policy explains how we collect, use, and safeguard your information when you play <strong>"Tarneeb Challenge"</strong>. We are committed to protecting your personal data.</p>
+
+            <h2>1. Information We Collect 📊</h2>
+            <p>We collect and process the following information to ensure the game functions properly:</p>
+            <ul>
+                <li><strong>Account Data:</strong> Your registered email address, player nickname (Username), and encrypted password for secure login.</li>
+                <li><strong>Gameplay Statistics:</strong> Rounds played, wins/losses, accumulated points, and leaderboard standings to manage challenge competitions.</li>
+                <li><strong>Subscription Status:</strong> VIP subscription status validated securely via official app stores.</li>
+            </ul>
+
+            <h2>2. How We Use Your Data ⚙️</h2>
+            <p>We use the collected information solely for the following purposes:</p>
+            <ul>
+                <li>To create and secure player accounts and facilitate stable multiplayer matchmaking.</li>
+                <li>To manage and calculate leaderboard ranks and distribute challenge prizes.</li>
+                <li>To enable and process VIP status for active monthly or yearly subscriptions.</li>
+                <li>To provide technical support and fix game performance issues.</li>
+            </ul>
+
+            <h2>3. Data Sharing & Security 🔒</h2>
+            <ul>
+                <li><strong>No Data Selling:</strong> We do not sell, trade, or share your personal data with third-party advertisers.</li>
+                <li><strong>Service Providers:</strong> We store all database entries securely using industry-standard cloud providers like **Firebase Auth & Firestore** (by Google) under strict encryption.</li>
+            </ul>
+
+            <h2>4. Your Rights & Data Deletion 🗑️</h2>
+            <p>You have the right to access, update, or request the deletion of your personal data at any time.</p>
+            <p>You can request to permanently delete your account and all associated data by visiting our online form: <a href="delete-account.html" class="link-highlight">Account & Data Deletion Request Page</a>.</p>
+
+            <h2>5. Contact Us ✉️</h2>
+            <p>If you have any questions regarding this Privacy Policy or data safety practices, please contact us via our support email.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span class="ar-content">حقوق النشر © 2026 مطور تحدي الطرنيب. جميع الحقوق محفوظة.</span>
+        <span class="en-content">Copyright © 2026 Tarneeb Challenge Developer. All rights reserved.</span>
+    </div>
+
+    <script>
+        // Language Switcher Logic
+        const toggleBtn = document.getElementById('langToggle');
+        toggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('en')) {
+                document.body.classList.remove('en');
+                document.body.setAttribute('dir', 'rtl');
+                toggleBtn.textContent = 'English';
+                document.documentElement.lang = 'ar';
+            } else {
+                document.body.classList.add('en');
+                document.body.setAttribute('dir', 'ltr');
+                toggleBtn.textContent = 'العربية';
+                document.documentElement.lang = 'en';
+            }
+        });
+    </script>
+</body>
+</html>

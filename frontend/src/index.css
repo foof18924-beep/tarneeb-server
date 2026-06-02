@@ -1,0 +1,861 @@
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  --primary-green: #0f5132;
+  --table-green: #198754;
+  --table-border: #4a2e15; /* dark wood color */
+  
+  --card-white: #ffffff;
+  --card-red: #d32f2f;
+  --card-black: #212121;
+  
+  background-color: #121212;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* strictly prevent scroll */
+  touch-action: none; /* strictly prevent pull-to-refresh and dragging */
+}
+
+body {
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  background-color: #121212;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Premium Casino Table Background */
+.game-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+  overflow: hidden; /* strictly prevents any shaking from animation overflow */
+}
+
+/* Force Landscape layout on portrait mobiles */
+@media screen and (orientation: portrait) {
+  .game-container {
+    width: 100vh;
+    height: 100vw;
+    transform-origin: center center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    z-index: 9999;
+  }
+}
+
+.poker-table {
+  background: radial-gradient(circle at center, var(--table-green) 0%, var(--primary-green) 100%);
+  border: 18px solid var(--table-border);
+  border-radius: 400px;
+  width: 86%;
+  max-width: 1100px;
+  height: 76%;
+  position: relative;
+  box-shadow: 
+    inset 0 0 60px rgba(0,0,0,0.7),
+    0 20px 50px rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+/* Modern Button */
+.btn-primary {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
+  margin-top: 15px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230, 126, 34, 0.6);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+input.modern-input {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  margin: 10px 0;
+  width: 100%;
+  outline: none;
+}
+input.modern-input:focus {
+  border-color: #f39c12;
+}
+
+/* Playing Card Styles (Front) - Smaller & Slight Overlap */
+.playing-card {
+  width: 78px;
+  height: 110px;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 5px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(0,0,0,0.05);
+  font-size: 18px;
+  font-weight: 900;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), margin 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  margin-left: -48px; /* overlap cards to group closely */
+  position: relative;
+  overflow: hidden;
+}
+.playing-card .card-top, .playing-card .card-bottom {
+  font-size: 11px;
+}
+.playing-card .card-center {
+  font-size: 18px !important;
+  line-height: 1.1;
+}
+.playing-card:first-child {
+  margin-left: 0;
+}
+.playing-card:hover {
+  transform: translateY(-12px) scale(1.15) !important;
+  z-index: 1000 !important;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.6);
+}
+
+/* Highlighting Trump Suit (Tarneeb) - Darker & Golden-Green */
+.playing-card.tarneeb-suit-card {
+  filter: brightness(0.82) contrast(1.1);
+  border: 2px solid #f1c40f;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  box-shadow: 0 0 10px rgba(241, 196, 15, 0.7), inset 0 0 6px rgba(46, 125, 50, 0.2);
+}
+
+.card-red { color: #e74c3c; }
+.card-black { color: #2c3e50; }
+
+/* Player Positions */
+.player-hand {
+  display: flex;
+  position: absolute;
+}
+.player-bottom { bottom: -60px; left: 50%; transform: translateX(-50%); z-index: 10;}
+.player-top { top: -15px; left: 50%; transform: translateX(-50%); }
+.player-left { left: 0; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+.player-right { right: 0; top: 50%; transform: translate(50%, -50%) rotate(-90deg); }
+
+/* Opponent Card Styles (Back) */
+.opponent-card {
+  width: 32px;
+  height: 48px;
+  background: 
+    linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.2) 100%),
+    repeating-linear-gradient(45deg, #2980b9 0, #2980b9 4px, #34495e 4px, #34495e 8px);
+  border: 1.5px solid white;
+  border-radius: 4px;
+  margin-left: -15px; /* overlap cards to group closely */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 0 8px rgba(0,0,0,0.3);
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.opponent-card::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px; right: 3px; bottom: 3px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 1px;
+}
+.opponent-card:first-child { margin-left: 0; }
+
+/* Thrown Card Animation - Smoother */
+@keyframes throwCard {
+  0% { transform: translate(var(--dx), var(--dy)) scale(1.8) rotate(0deg); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1) rotate(var(--rot)); opacity: 1; }
+}
+.thrown-card {
+  animation: throwCard 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Pull to Winner Animations */
+.pull-to-0 { animation: pull0 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
+.pull-to-1 { animation: pull1 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
+.pull-to-2 { animation: pull2 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
+.pull-to-3 { animation: pull3 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important; }
+
+@keyframes pull0 { 100% { transform: translateY(180px) scale(0.25); opacity: 0; } }
+@keyframes pull1 { 100% { transform: translateX(180px) scale(0.25); opacity: 0; } }
+@keyframes pull2 { 100% { transform: translateY(-180px) scale(0.25); opacity: 0; } }
+@keyframes pull3 { 100% { transform: translateX(-180px) scale(0.25); opacity: 0; } }
+
+@media (max-width: 600px) {
+  .playing-card {
+    width: 58px !important;
+    height: 82px !important;
+    font-size: 13px !important;
+    margin-left: -32px !important;
+    padding: 3px !important;
+    border-radius: 4px !important;
+  }
+  .player-bottom {
+    bottom: -45px !important;
+  }
+  /* Hide the bottom inverted symbol on small cards to avoid clutter/overlap */
+  .playing-card .card-bottom {
+    display: none;
+  }
+  .playing-card .card-center {
+    font-size: 14px !important;
+    line-height: 1.1;
+  }
+  .player-left { left: 0; transform: translate(-50%, -50%) rotate(90deg) scale(0.95); }
+  .player-right { right: 0; transform: translate(50%, -50%) rotate(-90deg) scale(0.95); }
+  .player-top { transform: translateX(-50%) scale(0.95); top: -10px !important; }
+  
+  .opponent-card {
+    width: 25px !important;
+    height: 38px !important;
+    margin-left: -12px !important;
+  }
+}
+
+.center-play-area {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Card Dealing Animations - Smoother Easing */
+@keyframes dealCardBottom {
+  0% { transform: translate(0, -180px) scale(0.2) rotate(45deg); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes dealCardTop {
+  0% { transform: translate(0, 180px) scale(0.2) rotate(-45deg); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes dealCardLeft {
+  0% { transform: translate(180px, 0) scale(0.2) rotate(-90deg); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes dealCardRight {
+  0% { transform: translate(-180px, 0) scale(0.2) rotate(90deg); opacity: 0; }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+
+.deal-card-bottom {
+  animation: dealCardBottom 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.deal-card-top {
+  animation: dealCardTop 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.deal-card-left {
+  animation: dealCardLeft 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.deal-card-right {
+  animation: dealCardRight 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Emojis Fly Animations - Smoother Easing */
+@keyframes flyEmojiAnimation {
+  0% {
+    transform: translate(var(--x1), var(--y1)) scale(0.4) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    transform: translate(var(--x2), var(--y2)) scale(1.3) rotate(360deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x2), var(--y2)) scale(1.1) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.flying-emoji {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 32px;
+  z-index: 2000;
+  pointer-events: none;
+  transform: translate(var(--x1), var(--y1));
+  animation: flyEmojiAnimation 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Tomato Splat Splash Effect - Smoother Easing */
+@keyframes splatAnimation {
+  0% {
+    transform: translate(var(--x2), var(--y2)) translate(-20px, -20px) scale(0.5);
+    opacity: 1;
+    filter: blur(0px);
+  }
+  35% {
+    transform: translate(var(--x2), var(--y2)) translate(-20px, -20px) scale(1.5);
+    opacity: 0.95;
+    filter: blur(0.5px);
+  }
+  100% {
+    transform: translate(var(--x2), var(--y2)) translate(-20px, -20px) scale(1.7);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+
+.tomato-splat {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  z-index: 2000;
+  pointer-events: none;
+  transform: translate(var(--x2), var(--y2)) translate(-20px, -20px);
+  background: radial-gradient(circle, #e74c3c 30%, rgba(231,76,60,0.85) 60%, transparent 80%);
+  border-radius: 50%;
+  animation: splatAnimation 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tomato-splat::before {
+  content: '💦';
+  position: absolute;
+  font-size: 32px;
+  top: 15px;
+  left: 15px;
+}
+
+/* ==========================================================================
+   Premium Mobile Game UI Design Tokens (Casino/Gold/Dark)
+   ========================================================================== */
+
+/* Shimmer shine animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Pulsing shadow for play button */
+@keyframes pulseGreenGlow {
+  0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.4), 0 0 20px rgba(46, 204, 113, 0.2); }
+  50% { box-shadow: 0 0 25px rgba(46, 204, 113, 0.8), 0 0 40px rgba(46, 204, 113, 0.4); }
+  100% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.4), 0 0 20px rgba(46, 204, 113, 0.2); }
+}
+
+/* Pulsing shadow for VIP badge */
+@keyframes goldGlowPulse {
+  0% { border-color: rgba(241, 196, 15, 0.5); box-shadow: 0 0 8px rgba(241, 196, 15, 0.2); }
+  50% { border-color: rgba(241, 196, 15, 1); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); }
+  100% { border-color: rgba(241, 196, 15, 0.5); box-shadow: 0 0 8px rgba(241, 196, 15, 0.2); }
+}
+
+/* Connection Pulse dot */
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+/* Light sweep across golden text */
+@keyframes goldSweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Premium radial background */
+.premium-home-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 85px 16px 100px 16px;
+  background: radial-gradient(circle at 50% 30%, #1e1e2f 0%, #0d0d15 50%, #050508 100%);
+  min-height: 100vh;
+}
+
+/* Premium Card */
+.premium-card {
+  width: 100%;
+  background: rgba(25, 25, 38, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(241, 196, 15, 0.18);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(241, 196, 15, 0.4), transparent);
+}
+
+/* Golden Prize display */
+.gold-prize-badge {
+  background: linear-gradient(135deg, #FFE07D 0%, #F39C12 40%, #D8A538 70%, #8A640F 100%);
+  background-size: 200% 200%;
+  animation: goldSweep 8s ease infinite;
+  padding: 20px 15px;
+  border-radius: 20px;
+  color: #120a00;
+  font-weight: 900;
+  text-align: center;
+  width: 100%;
+  box-shadow: 0 8px 25px rgba(243, 156, 18, 0.35), inset 0 2px 4px rgba(255,255,255,0.4);
+  margin-bottom: 22px;
+  border: 1px solid #FFF3CD;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.gold-prize-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(18, 10, 0, 0.7);
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.gold-prize-value {
+  font-size: 38px;
+  font-weight: 900;
+  color: #120a00;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* Play Button Premium */
+.play-btn-premium {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 24px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: white;
+  border: none;
+  border-radius: 18px;
+  cursor: pointer;
+  box-shadow: 0 8px 25px rgba(46, 204, 113, 0.4);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s;
+  animation: pulseGreenGlow 3s infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.play-btn-premium::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite linear;
+}
+
+.play-btn-premium:active {
+  transform: scale(0.96);
+  box-shadow: 0 3px 10px rgba(46, 204, 113, 0.6);
+}
+
+/* VIP Account Card */
+.vip-account-card {
+  width: 100%;
+  padding: 15px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(241,196,15,0.12) 0%, rgba(243,156,18,0.04) 100%);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  animation: goldGlowPulse 4s infinite ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.free-account-card {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.free-account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f39c12, #e67e22);
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.upgrade-vip-link {
+  align-self: center;
+  color: #f1c40f;
+  font-weight: bold;
+  font-size: 14px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: color 0.2s;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+
+.upgrade-vip-link:hover {
+  color: #f39c12;
+}
+
+/* Top Navigation Bar Header */
+.premium-app-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 65px;
+  padding: 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  background: rgba(13, 13, 21, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.header-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.06);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.header-user-avatar {
+  width: 26px;
+  height: 26px;
+  background: linear-gradient(135deg, #f1c40f, #e67e22);
+  color: #120a00;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.header-user-name {
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.connection-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.3);
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+.connection-dot.online { background-color: #2ecc71; box-shadow: 0 0 8px #2ecc71; }
+.connection-dot.offline { background-color: #e74c3c; box-shadow: 0 0 8px #e74c3c; }
+
+/* Floating Premium Bottom Bar */
+.floating-nav-bar {
+  position: fixed;
+  bottom: 18px; left: 16px; right: 16px;
+  height: 68px;
+  background: rgba(18, 18, 28, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 22px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  zIndex: 10000;
+  padding: 0 10px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7f8c8d;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+.nav-icon {
+  font-size: 22px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s;
+  display: block;
+}
+
+.nav-label {
+  font-size: 10px;
+  margin-top: 3px;
+  transition: color 0.3s, font-weight 0.3s;
+  white-space: nowrap;
+}
+
+.nav-item.active {
+  color: #f1c40f;
+}
+
+.nav-item.active .nav-icon {
+  transform: translateY(-5px) scale(1.18);
+  text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+}
+
+.nav-item.active .nav-label {
+  font-weight: 900;
+  color: #f1c40f;
+}
+
+.nav-active-dot {
+  position: absolute;
+  bottom: 8px;
+  width: 4px;
+  height: 4px;
+  background-color: #f1c40f;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #f1c40f;
+  animation: pulseDot 2.5s infinite;
+}
+
+.nav-item.admin-nav.active {
+  color: #e74c3c;
+}
+.nav-item.admin-nav.active .nav-icon {
+  transform: translateY(-5px) scale(1.18);
+  text-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
+}
+.nav-item.admin-nav.active .nav-label {
+  color: #e74c3c;
+}
+.nav-item.admin-nav.active .nav-active-dot {
+  background-color: #e74c3c;
+  box-shadow: 0 0 8px #e74c3c;
+}
+
+/* Beautiful Countdown Digit styling */
+.countdown-box-gold {
+  background: rgba(10, 10, 15, 0.7);
+  border: 1px solid rgba(241,196,15,0.25);
+  border-radius: 12px;
+  padding: 8px 12px;
+  min-width: 55px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.countdown-val {
+  font-size: 24px;
+  font-weight: bold;
+  color: #f1c40f;
+  line-height: 1.1;
+}
+
+.countdown-lbl {
+  font-size: 10px;
+  color: #888;
+  margin-top: 3px;
+  text-transform: uppercase;
+}
+
+/* Bottom Navigation SVG Styling */
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nav-item.active .nav-icon svg {
+  stroke: #f1c40f;
+  filter: drop-shadow(0 0 4px rgba(241, 196, 15, 0.5));
+}
+
+.nav-item.admin-nav.active .nav-icon svg {
+  stroke: #e74c3c;
+  filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.5));
+}
+
+/* Chat bubble entry animation */
+@keyframes bubbleFadeInUp {
+  0% { transform: translate(-50%, 15px) scale(0.7); opacity: 0; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+/* Pulsing shadow for active turn player avatar */
+@keyframes pulseGoldGlow {
+  0% { box-shadow: 0 0 5px rgba(241, 196, 15, 0.4); border-color: #f1c40f; }
+  50% { box-shadow: 0 0 16px rgba(241, 196, 15, 0.8), inset 0 0 4px rgba(241, 196, 15, 0.5); border-color: #ffe07d; }
+  100% { box-shadow: 0 0 5px rgba(241, 196, 15, 0.4); border-color: #f1c40f; }
+}
+.pulse-active-avatar {
+  animation: pulseGoldGlow 1.5s infinite ease-in-out !important;
+}
+
+/* Cinematic Trump Suit Declaration Overlay */
+@keyframes overlayFadeIn {
+  0% { background: rgba(0, 0, 0, 0); }
+  100% { background: rgba(10, 15, 30, 0.85); }
+}
+@keyframes cardScaleUp {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.trump-declaration-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3000;
+  animation: overlayFadeIn 0.3s forwards;
+  pointer-events: none;
+}
+.trump-overlay-card {
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #f1c40f;
+  border-radius: 24px;
+  padding: 30px 50px;
+  text-align: center;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(241, 196, 15, 0.25);
+  animation: cardScaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.trump-overlay-suit.red {
+  color: #e74c3c;
+  animation: pulseRed 1s infinite alternate;
+}
+.trump-overlay-suit.black {
+  color: #ffffff;
+  animation: pulseWhite 1s infinite alternate;
+}
+@keyframes pulseRed {
+  0% { transform: scale(0.95); text-shadow: 0 0 10px rgba(231, 76, 60, 0.3); }
+  100% { transform: scale(1.05); text-shadow: 0 0 25px rgba(231, 76, 60, 0.7); }
+}
+@keyframes pulseWhite {
+  0% { transform: scale(0.95); text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+  100% { transform: scale(1.05); text-shadow: 0 0 25px rgba(255, 255, 255, 0.6); }
+}

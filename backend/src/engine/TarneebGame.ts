@@ -1,0 +1,265 @@
+import { Deck } from './Deck';
+import { Player } from './Player';
+import { Card, Suit } from './Card';
+import { Game } from './Game';
+
+export type GameState = 'WAITING' | 'BIDDING' | 'SELECTING_TRUMP' | 'PLAYING' | 'TRICK_END' | 'FINISHED';
+
+export class TarneebGame implements Game {
+  public players: Player[] = [];
+  public state: GameState = 'WAITING';
+  public gameMode: 'INDIVIDUAL' | 'PARTNERSHIP' = 'INDIVIDUAL';
+  public deck: Deck;
+  
+  public dealerIndex: number = 3; // Start with player 3 as dealer, so player 0 bids first
+  public currentBid: number = 2; // minimum valid bid is 3
+  public highestBidderIndex: number = -1;
+  public trumpSuit: Suit | null = null;
+  
+  public currentTurnIndex: number = 0;
+  private consecutivePasses: number = 0;
+  
+  // Individual Tarneeb (Yahudi)
+  public playerTricks: number[] = [0, 0, 0, 0];
+  public playerScores: number[] = [0, 0, 0, 0];
+  
+  public targetScore: number = 39;
+
+  public currentTrick: { playerIndex: number, card: Card }[] = [];
+  public leadSuit: Suit | null = null;
+  public tricksPlayed: number = 0;
+
+  constructor() {
+    this.deck = new Deck();
+  }
+
+  addPlayer(player: Player) {
+    if (this.players.length < 4) {
+      this.players.push(player);
+    }
+  }
+
+  startRound(targetScore?: number) {
+    if (targetScore) this.targetScore = targetScore;
+    if (this.players.length !== 4) throw new Error("Need exactly 4 players");
+    this.state = 'BIDDING';
+    this.deck.initialize();
+    this.deck.shuffle();
+    
+    // Deal 13 cards to each player
+    this.players.forEach(p => p.cards = []); 
+    for (let i = 0; i < 4; i++) {
+      this.players[i].addCards(this.deck.deal(13));
+    }
+    
+    // Rotate dealer
+    this.dealerIndex = (this.dealerIndex + 1) % 4;
+    
+    this.currentBid = this.gameMode === 'PARTNERSHIP' ? 6 : 2;
+    this.highestBidderIndex = -1;
+    this.currentTurnIndex = (this.dealerIndex + 1) % 4; // Bidding starts next to dealer
+    this.consecutivePasses = 0;
+    this.playerTricks = [0, 0, 0, 0];
+    this.trumpSuit = null;
+    this.currentTrick = [];
+    this.leadSuit = null;
+    this.tricksPlayed = 0;
+  }
+
+  placeBid(playerIndex: number, bid: number | 'PASS') {
+    if (this.state !== 'BIDDING' || playerIndex !== this.currentTurnIndex) return;
+
+    if (bid === 'PASS') {
+      this.consecutivePasses++;
+    } else {
+      const minBid = this.gameMode === 'PARTNERSHIP' ? 7 : 3;
+      if (bid >= minBid && bid > this.currentBid && bid <= 13) {
+        this.currentBid = bid;
+        this.highestBidderIndex = playerIndex;
+        this.consecutivePasses = 0;
+      } else {
+        return; // Invalid bid
+      }
+    }
+    
+    if (this.consecutivePasses >= 3 || this.currentBid === 13) {
+      if (this.highestBidderIndex === -1) {
+        this.startRound(this.targetScore); // redeal
+        return;
+      }
+      if (this.gameMode === 'PARTNERSHIP') {
+        this.state = 'SELECTING_TRUMP';
+      } else {
+        this.trumpSuit = 'Hearts';
+        this.state = 'PLAYING';
+      }
+      this.currentTurnIndex = this.highestBidderIndex;
+    } else {
+      this.currentTurnIndex = (this.currentTurnIndex + 1) % 4;
+    }
+  }
+
+  selectTrump(playerIndex: number, suit: Suit) {
+    if (this.state !== 'SELECTING_TRUMP' || playerIndex !== this.highestBidderIndex) return;
+    this.trumpSuit = suit;
+    this.state = 'PLAYING';
+    this.currentTurnIndex = this.highestBidderIndex;
+  }
+
+  playCard(playerIndex: number, cardIndex: number) {
+    if (this.state !== 'PLAYING' || playerIndex !== this.currentTurnIndex) return;
+    
+    const player = this.players[playerIndex];
+    const cardToPlay = player.cards[cardIndex];
+    if (!cardToPlay) return;
+
+    // Validate if the player MUST play the lead suit
+    if (this.leadSuit && cardToPlay.suit !== this.leadSuit) {
+      const hasLeadSuit = player.cards.some(c => c.suit === this.leadSuit);
+      if (hasLeadSuit) {
+        return; // Invalid play, must follow lead suit
+      }
+    }
+
+    const playedCard = player.playCard(cardIndex)!;
+    
+    if (this.currentTrick.length === 0) {
+      this.leadSuit = playedCard.suit;
+    }
+
+    this.currentTrick.push({ playerIndex, card: playedCard });
+    
+    if (this.currentTrick.length === 4) {
+      this.state = 'TRICK_END';
+    } else {
+      this.currentTurnIndex = (this.currentTurnIndex + 1) % 4;
+    }
+  }
+
+  public resolveTrick() {
+    if (this.state !== 'TRICK_END') return;
+
+    let winningPlay = this.currentTrick[0];
+
+    for (let i = 1; i < 4; i++) {
+      const play = this.currentTrick[i];
+      const currentWinningCard = winningPlay.card;
+      const playedCard = play.card;
+
+      if (playedCard.suit === this.trumpSuit) {
+        if (currentWinningCard.suit !== this.trumpSuit) {
+          winningPlay = play;
+        } else if (playedCard.value > currentWinningCard.value) {
+          winningPlay = play;
+        }
+      } else if (playedCard.suit === this.leadSuit && currentWinningCard.suit !== this.trumpSuit) {
+        if (playedCard.value > currentWinningCard.value) {
+          winningPlay = play;
+        }
+      }
+    }
+
+    const winnerIndex = winningPlay.playerIndex;
+    this.playerTricks[winnerIndex]++;
+
+    this.tricksPlayed++;
+    this.state = 'PLAYING';
+    
+    if (this.tricksPlayed === 13) {
+      this.resolveRound();
+    } else {
+      this.currentTurnIndex = winnerIndex;
+      this.currentTrick = [];
+      this.leadSuit = null;
+    }
+  }
+
+  private resolveRound() {
+    const bidderBid = this.currentBid;
+    const bidderTricks = this.playerTricks[this.highestBidderIndex];
+
+    if (this.gameMode === 'PARTNERSHIP') {
+      // Team A: Player 0 and 2
+      // Team B: Player 1 and 3
+      const teamATricks = this.playerTricks[0] + this.playerTricks[2];
+      const teamBTricks = this.playerTricks[1] + this.playerTricks[3];
+
+      const biddingTeam = [0, 2].includes(this.highestBidderIndex) ? 'A' : 'B';
+      
+      if (biddingTeam === 'A') {
+        if (teamATricks >= bidderBid) {
+          const pointsWon = teamATricks;
+          this.playerScores[0] += pointsWon;
+          this.playerScores[2] += pointsWon;
+        } else {
+          this.playerScores[0] -= bidderBid;
+          this.playerScores[2] -= bidderBid;
+        }
+        this.playerScores[1] += teamBTricks;
+        this.playerScores[3] += teamBTricks;
+      } else {
+        if (teamBTricks >= bidderBid) {
+          const pointsWon = teamBTricks;
+          this.playerScores[1] += pointsWon;
+          this.playerScores[3] += pointsWon;
+        } else {
+          this.playerScores[1] -= bidderBid;
+          this.playerScores[3] -= bidderBid;
+        }
+        this.playerScores[0] += teamATricks;
+        this.playerScores[2] += teamATricks;
+      }
+    } else {
+      for (let i = 0; i < 4; i++) {
+        if (i === this.highestBidderIndex) {
+          if (bidderTricks >= bidderBid) {
+            const points = bidderBid >= 7 ? bidderBid * 2 : bidderBid;
+            this.playerScores[i] += points;
+          } else {
+            this.playerScores[i] -= bidderBid;
+          }
+        } else {
+          this.playerScores[i] += this.playerTricks[i];
+        }
+      }
+    }
+
+    // Target score to win
+    if (this.playerScores.some(score => score >= this.targetScore)) {
+      this.state = 'FINISHED';
+    } else {
+      this.startRound(this.targetScore);
+    }
+  }
+
+  public handleTimeout() {
+    if (this.state === 'BIDDING') {
+      this.placeBid(this.currentTurnIndex, 'PASS');
+    } else if (this.state === 'SELECTING_TRUMP') {
+      // Choose the suit the player has the most cards in
+      const bidder = this.players[this.highestBidderIndex];
+      const suitCounts: Record<Suit, number> = { Hearts: 0, Diamonds: 0, Clubs: 0, Spades: 0 };
+      bidder.cards.forEach(c => {
+        suitCounts[c.suit]++;
+      });
+      let bestSuit: Suit = 'Hearts';
+      let maxCount = 0;
+      (Object.keys(suitCounts) as Suit[]).forEach(suit => {
+        if (suitCounts[suit] > maxCount) {
+          maxCount = suitCounts[suit];
+          bestSuit = suit;
+        }
+      });
+      this.selectTrump(this.highestBidderIndex, bestSuit);
+    } else if (this.state === 'PLAYING') {
+      const player = this.players[this.currentTurnIndex];
+      // Find a valid card to play
+      let validCardIndex = 0;
+      if (this.leadSuit) {
+        const hasLead = player.cards.findIndex(c => c.suit === this.leadSuit);
+        if (hasLead !== -1) validCardIndex = hasLead;
+      }
+      this.playCard(this.currentTurnIndex, validCardIndex);
+    }
+  }
+}

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الطرنيب - طلب حذف الحساب والبيانات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #27ae60;
+            --primary-hover: #2ecc71;
+            --bg-gradient: radial-gradient(circle at center, #0a1f10 0%, #030a05 100%);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(39, 174, 96, 0.2);
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            margin: 40px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 20px;
+        }
+
+        .logo-placeholder {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px var(--primary-color));
+        }
+
+        h1 {
+            font-size: 26px;
+            color: var(--primary-hover);
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+            color: #fff;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            border-right: 4px solid var(--primary-color);
+            padding-right: 10px;
+        }
+
+        p, li {
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        ul {
+            margin-right: 20px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        input[type="email"], input[type="text"], textarea {
+            width: 100%;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="email"]:focus, input[type="text"]:focus, textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        .checkbox-group input {
+            margin-top: 4px;
+            accent-color: var(--primary-color);
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: normal;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2ecc71 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.3);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(39, 174, 96, 0.5);
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .alert-success {
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid #2ecc71;
+            color: #2ecc71;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-bottom: 20px;
+        }
+
+        /* English content switcher styling */
+        .lang-switch {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .en-content {
+            display: none;
+        }
+
+        body.en {
+            direction: ltr;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body.en h2 {
+            border-right: none;
+            border-left: 4px solid var(--primary-color);
+            padding-right: 0;
+            padding-left: 10px;
+        }
+
+        body.en ul {
+            margin-right: 0;
+            margin-left: 20px;
+        }
+    </style>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="lang-switch">
+            <button class="lang-btn" id="langToggle">English</button>
+        </div>
+
+        <div class="header">
+            <div class="logo-placeholder">🃏</div>
+            <h1 class="ar-content">تحدي الطرنيب</h1>
+            <h1 class="en-content">Tarneeb Challenge</h1>
+            <p class="ar-content">طلب حذف الحساب والبيانات الشخصية</p>
+            <p class="en-content">Account & Data Deletion Request</p>
+        </div>
+
+        <div id="successMessage" class="alert-success">
+            <span class="ar-content">تم استلام طلبك بنجاح! سنقوم بمعالجة طلب حذف الحساب وإزالة كافة بياناتك الشخصية خلال 24-48 ساعة. سيتم إرسال رسالة تأكيد لبريدك الإلكتروني فور اكتمال الإجراء.</span>
+            <span class="en-content">Your request has been received successfully! We will process the account deletion and remove all personal data within 24-48 hours. A confirmation email will be sent once completed.</span>
+        </div>
+
+        <form id="deletionForm">
+            <!-- Disclosures -->
+            <div class="ar-content">
+                <h2>سياسة حذف البيانات والحساب 📋</h2>
+                <p>تلتزم لعبة <strong>"تحدي الطرنيب"</strong> ومطورها بحماية خصوصية بيانات المستخدمين. عند تقديم طلب حذف الحساب، سيتم اتخاذ الإجراءات التالية:</p>
+                <ul>
+                    <li><strong>البيانات التي سيتم حذفها فوراً:</strong> حساب اللاعب بالكامل، والاسم المستعار، والبريد الإلكتروني المربوط، وكلمة المرور المشفرة.</li>
+                    <li><strong>بيانات اللعب والإحصائيات:</strong> سيتم محو كامل إحصائيات اللعب (عدد الجولات الفائزة والخاسرة، إجمالي النقاط، وسجل المنافسات في لوحة المتصدرين).</li>
+                    <li><strong>فترة الحفاظ على البيانات:</strong> يتم تنفيذ الحذف بشكل كامل ونهائي خلال 24 إلى 48 ساعة كحد أقصى من استقبال الطلب.</li>
+                    <li><strong>البيانات المستثناة:</strong> تُستثنى سجلات الفواتير والعمليات المالية الشرائية فقط للاشتراكات VIP التاريخية وذلك التزاماً بالقوانين والأنظمة الضريبية والمالية المفروضة من قِبل Google Play و Apple App Store.</li>
+                </ul>
+
+                <h2>تقديم طلب حذف الحساب ✉️</h2>
+                <p>يرجى إدخال معلومات حسابك المسجلة لدينا لإتمام عملية الحذف:</p>
+            </div>
+
+            <div class="en-content">
+                <h2>Account & Data Deletion Policy 📋</h2>
+                <p>The developer of <strong>"Tarneeb Challenge"</strong> is fully committed to user privacy. Upon submitting this request, the following actions will be performed:</p>
+                <ul>
+                    <li><strong>Data deleted permanently:</strong> Your player profile, username, registered email address, and encrypted credentials.</li>
+                    <li><strong>Gameplay statistics:</strong> All game history (rounds played, wins/losses, total score, and active rankings in the leaderboard).</li>
+                    <li><strong>Retention Period:</strong> Deletion will be fully executed and finalized within 24 to 48 hours from request submission.</li>
+                    <li><strong>Exceptions:</strong> Historic billing and subscription financial records are retained solely for tax and legal compliance reasons mandated by Google Play and Apple App Store, and are never used for any other purposes.</li>
+                </ul>
+
+                <h2>Submit Deletion Request ✉️</h2>
+                <p>Please enter your registered account information to proceed with the deletion:</p>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="ar-content">البريد الإلكتروني المسجل في اللعبة *</label>
+                <label for="email" class="en-content">Registered Email Address *</label>
+                <input type="email" id="email" required placeholder="example@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="username" class="ar-content">اسم اللاعب (اختياري)</label>
+                <label for="username" class="en-content">Player Name (Optional)</label>
+                <input type="text" id="username" placeholder="اسم المستخدم">
+            </div>
+
+            <div class="form-group">
+                <label for="reason" class="ar-content">سبب طلب حذف الحساب (اختياري)</label>
+                <label for="reason" class="en-content">Reason for Deletion (Optional)</label>
+                <textarea id="reason" rows="3" placeholder="..."></textarea>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="consent" required>
+                <label for="consent" class="ar-content">
+                    أقر برغبتي في حذف حسابي وكامل البيانات التاريخية والترقية المرتبطة به نهائياً، مع علمي بأن هذا الإجراء غير قابل للتراجع. *
+                </label>
+                <label for="consent" class="en-content">
+                    I confirm that I want to permanently delete my account and all associated gameplay history and upgrades. I understand this action is irreversible. *
+                </label>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span class="ar-content">إرسال طلب الحذف 🗑️</span>
+                <span class="en-content">Submit Deletion Request 🗑️</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="footer">
+        <span class="ar-content">حقوق النشر © 2026 مطور تحدي الطرنيب. جميع الحقوق محفوظة.</span>
+        <span class="en-content">Copyright © 2026 Tarneeb Challenge Developer. All rights reserved.</span>
+    </div>
+
+    <script>
+        // Firebase Configuration (Same as App configuration)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOzZFutecINLLtVgA-UowpkSRxdNYJ47A",
+            authDomain: "jojo-ada6a.firebaseapp.com",
+            projectId: "jojo-ada6a"
+        };
+
+        // Initialize Firebase Compat
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Language Switcher Logic
+        const toggleBtn = document.getElementById('langToggle');
+        toggleBtn.addEventListener('click', () => {
+            if (document.body.classList.contains('en')) {
+                document.body.classList.remove('en');
+                document.body.setAttribute('dir', 'rtl');
+                toggleBtn.textContent = 'English';
+                document.documentElement.lang = 'ar';
+            } else {
+                document.body.classList.add('en');
+                document.body.setAttribute('dir', 'ltr');
+                toggleBtn.textContent = 'العربية';
+                document.documentElement.lang = 'en';
+            }
+        });
+
+        // Form Submit handler
+        const form = document.getElementById('deletionForm');
+        const successAlert = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.7';
+            submitBtn.textContent = '...';
+
+            const emailVal = document.getElementById('email').value;
+            const usernameVal = document.getElementById('username').value;
+            const reasonVal = document.getElementById('reason').value;
+
+            try {
+                // Save deletion request to Firestore
+                await db.collection('deletion_requests').add({
+                    email: emailVal,
+                    username: usernameVal,
+                    reason: reasonVal,
+                    requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'pending'
+                });
+
+                form.reset();
+                form.style.display = 'none';
+                successAlert.style.display = 'block';
+            } catch (error) {
+                console.error("Firestore Deletion Request Error:", error);
+                alert(document.body.classList.contains('en') 
+                    ? "An error occurred while sending your request. Please try again or contact us." 
+                    : "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة لاحقاً أو التواصل معنا.");
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                submitBtn.innerHTML = document.body.classList.contains('en') 
+                    ? 'Submit Deletion Request 🗑️' 
+                    : 'إرسال طلب الحذف 🗑️';
+            }
+        });
+    </script>
+</body>
+</html>
