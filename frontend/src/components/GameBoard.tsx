@@ -797,14 +797,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
              <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: '8px', width: '100%' }}>
                 {gameState && gameState.gameMode === 'PARTNERSHIP' ? (
                   <>
-                    {/* Team A (Your Team) */}
+                    {/* Team A (Your Team) - scores are shared between partners */}
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '9.5px', color: 'white', lineHeight: '1.1', flex: 1 }}>
                        <span style={{ color: '#2ecc71', fontWeight: 'bold', whiteSpace: 'nowrap' }}>فريقك</span>
                        <span style={{ color: '#aaa', fontSize: '7.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px', marginTop: '1px' }}>
                          {gameState.players[gameState.myIndex].name.split(' ')[0]} + {gameState.players[(gameState.myIndex + 2) % 4].name.split(' ')[0]}
                        </span>
                        <span style={{color: '#f1c40f', fontWeight: 'bold', fontSize: '10.5px', marginTop: '2px'}}>
-                         {gameState.playerScores[gameState.myIndex]} <span style={{color: '#ccc', fontSize: '8px', fontWeight: 'normal'}}>({gameState.playerTricks[gameState.myIndex] + gameState.playerTricks[(gameState.myIndex + 2) % 4]})</span>
+                         {gameState.playerScores[gameState.myIndex]} <span style={{color: '#ccc', fontSize: '8px', fontWeight: 'normal'}}>({gameState.playerTricks[gameState.myIndex] + gameState.playerTricks[(gameState.myIndex + 2) % 4]}أوراق)</span>
                        </span>
                     </div>
 
@@ -818,7 +818,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                          {gameState.players[(gameState.myIndex + 1) % 4].name.split(' ')[0]} + {gameState.players[(gameState.myIndex + 3) % 4].name.split(' ')[0]}
                        </span>
                        <span style={{color: '#f1c40f', fontWeight: 'bold', fontSize: '10.5px', marginTop: '2px'}}>
-                         {gameState.playerScores[(gameState.myIndex + 1) % 4]} <span style={{color: '#ccc', fontSize: '8px', fontWeight: 'normal'}}>({gameState.playerTricks[(gameState.myIndex + 1) % 4] + gameState.playerTricks[(gameState.myIndex + 3) % 4]})</span>
+                         {gameState.playerScores[(gameState.myIndex + 1) % 4]} <span style={{color: '#ccc', fontSize: '8px', fontWeight: 'normal'}}>({gameState.playerTricks[(gameState.myIndex + 1) % 4] + gameState.playerTricks[(gameState.myIndex + 3) % 4]}أوراق)</span>
                        </span>
                     </div>
                   </>
@@ -850,14 +850,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
             <div style={{ position: 'absolute', zIndex: 100, top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15, 23, 42, 0.9)', padding: '40px', borderRadius: '20px', textAlign: 'center', border: '2px solid #f1c40f', boxShadow: '0 10px 50px rgba(0,0,0,0.8)', minWidth: '300px' }}>
               <h1 style={{ color: '#f1c40f', fontSize: '48px', marginBottom: '10px', textShadow: '2px 2px 4px black' }}>{t('game_over')}</h1>
               {(() => {
-                const maxScore = Math.max(...gameState.playerScores);
-                const winnerIdx = gameState.playerScores.findIndex((s: number) => s === maxScore);
-                
+                let winnerIdx = 0;
                 let winnerName = '';
                 if (gameState.gameMode === 'PARTNERSHIP') {
+                  // In partnership, compare team totals (players 0+2 vs 1+3)
+                  const teamAScore = gameState.playerScores[0] + gameState.playerScores[2];
+                  const teamBScore = gameState.playerScores[1] + gameState.playerScores[3];
+                  winnerIdx = teamAScore >= teamBScore ? 0 : 1;
                   const partnerIdx = (winnerIdx + 2) % 4;
                   winnerName = `${gameState.players[winnerIdx].name} و ${gameState.players[partnerIdx].name}`;
                 } else {
+                  const maxScore = Math.max(...gameState.playerScores);
+                  winnerIdx = gameState.playerScores.findIndex((s: number) => s === maxScore);
                   winnerName = gameState.players[winnerIdx].name;
                 }
 
@@ -904,6 +908,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
               <button onClick={() => handlePlaceBid('PASS')} style={{ width: '100%', padding: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}>
                  {t('pass')}
               </button>
+            </div>
+          )}
+
+          {/* Waiting for other player to bid */}
+          {gameState && gameState.state === 'BIDDING' && !isMyTurn && (
+            <div style={{ position: 'absolute', zIndex: 999, bottom: '30%', left: '50%', transform: 'translateX(-50%)', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', padding: '8px 16px', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <p style={{ color: '#aaa', margin: 0, fontSize: '12px' }}>
+                ⏳ بانتظار {gameState.players[gameState.currentTurnIndex]?.name.split(' ')[0]} ليزايد...
+              </p>
             </div>
           )}
 
