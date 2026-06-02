@@ -230,6 +230,7 @@ export class RoomManager {
         dealerIndex: game.dealerIndex,
         playerTricks: game.playerTricks,
         playerScores: game.playerScores,
+        playerBids: game.playerBids,
         targetScore: game.targetScore,
         currentTrick: game.currentTrick,
         myIndex: index,

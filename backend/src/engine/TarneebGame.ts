@@ -22,6 +22,7 @@ export class TarneebGame implements Game {
   // Individual Tarneeb (Yahudi)
   public playerTricks: number[] = [0, 0, 0, 0];
   public playerScores: number[] = [0, 0, 0, 0];
+  public playerBids: (number | 'PASS' | null)[] = [null, null, null, null];
   
   public targetScore: number = 39;
 
@@ -60,6 +61,7 @@ export class TarneebGame implements Game {
     this.currentTurnIndex = (this.dealerIndex + 1) % 4; // Bidding starts next to dealer
     this.consecutivePasses = 0;
     this.playerTricks = [0, 0, 0, 0];
+    this.playerBids = [null, null, null, null];
     this.trumpSuit = null;
     this.currentTrick = [];
     this.leadSuit = null;
@@ -71,12 +73,14 @@ export class TarneebGame implements Game {
 
     if (bid === 'PASS') {
       this.consecutivePasses++;
+      this.playerBids[playerIndex] = 'PASS';
     } else {
       const minBid = this.gameMode === 'PARTNERSHIP' ? 7 : 3;
       if (bid >= minBid && bid > this.currentBid && bid <= 13) {
         this.currentBid = bid;
         this.highestBidderIndex = playerIndex;
         this.consecutivePasses = 0;
+        this.playerBids[playerIndex] = bid;
       } else {
         return; // Invalid bid
       }

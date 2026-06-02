@@ -1011,9 +1011,30 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                      position: 'relative'
                    }}
                  >
-                   <div style={{ position: 'relative', width: '50px', height: '50px' }}>
-                     {/* SVG Timer */}
-                     {isTheirTurn && gameState.state !== 'FINISHED' && (
+                    <div style={{ position: 'relative', width: '50px', height: '50px' }}>
+                      {/* Bidding Action Badge */}
+                      {gameState.state === 'BIDDING' && gameState.playerBids && gameState.playerBids[idx] !== null && gameState.playerBids[idx] !== undefined && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '-12px',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: gameState.playerBids[idx] === 'PASS' ? '#7f8c8d' : 'linear-gradient(135deg, #f1c40f, #d35400)',
+                          color: 'white',
+                          padding: '2px 6px',
+                          borderRadius: '8px',
+                          fontSize: '9px',
+                          fontWeight: 'bold',
+                          boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.4)',
+                          zIndex: 160,
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {gameState.playerBids[idx] === 'PASS' ? 'باص' : `${gameState.playerBids[idx]}`}
+                        </div>
+                      )}
+                      {/* SVG Timer */}
+                      {isTheirTurn && gameState.state !== 'FINISHED' && (
                        <svg style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)', width: '50px', height: '50px', pointerEvents: 'none' }}>
                          <circle
                            cx="25"
