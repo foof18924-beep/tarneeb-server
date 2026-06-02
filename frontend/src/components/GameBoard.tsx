@@ -1007,52 +1007,52 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                      transform: getCounterRotation(posClass),
                      transformOrigin: 'center center',
                      zIndex: 150,
-                     width: '50px',
+                     width: '68px',
                      position: 'relative'
                    }}
                  >
-                    <div style={{ position: 'relative', width: '50px', height: '50px' }}>
+                    <div style={{ position: 'relative', width: '68px', height: '68px' }}>
                       {/* Bidding Action Badge */}
                       {gameState.state === 'BIDDING' && gameState.playerBids && gameState.playerBids[idx] !== null && gameState.playerBids[idx] !== undefined && (
                         <div style={{
                           position: 'absolute',
-                          top: '-12px',
+                          top: '-15px',
                           left: '50%',
                           transform: 'translateX(-50%)',
                           background: gameState.playerBids[idx] === 'PASS' ? '#7f8c8d' : 'linear-gradient(135deg, #f1c40f, #d35400)',
                           color: 'white',
-                          padding: '2px 6px',
+                          padding: '3px 8px',
                           borderRadius: '8px',
-                          fontSize: '9px',
+                          fontSize: '11px',
                           fontWeight: 'bold',
-                          boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
-                          border: '1px solid rgba(255,255,255,0.4)',
+                          boxShadow: '0 3px 6px rgba(0,0,0,0.4)',
+                          border: '1.5px solid rgba(255,255,255,0.5)',
                           zIndex: 160,
                           whiteSpace: 'nowrap'
                         }}>
-                          {gameState.playerBids[idx] === 'PASS' ? 'باص' : `${gameState.playerBids[idx]}`}
+                          {gameState.playerBids[idx] === 'PASS' ? 'باص' : `طلب: ${gameState.playerBids[idx]}`}
                         </div>
                       )}
                       {/* SVG Timer */}
                       {isTheirTurn && gameState.state !== 'FINISHED' && (
-                       <svg style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)', width: '50px', height: '50px', pointerEvents: 'none' }}>
+                       <svg style={{ position: 'absolute', top: 0, left: 0, transform: 'rotate(-90deg)', width: '68px', height: '68px', pointerEvents: 'none' }}>
                          <circle
-                           cx="25"
-                           cy="25"
-                           r="22"
+                           cx="34"
+                           cy="34"
+                           r="30"
                            fill="none"
                            stroke="rgba(255,255,255,0.15)"
-                           strokeWidth="2.5"
+                           strokeWidth="3"
                          />
                          <circle
-                           cx="25"
-                           cy="25"
-                           r="22"
+                           cx="34"
+                           cy="34"
+                           r="30"
                            fill="none"
                            stroke="#f1c40f"
-                           strokeWidth="2.5"
-                           strokeDasharray="138.2"
-                           strokeDashoffset={138.2 * (1 - timeLeft / 20)}
+                           strokeWidth="3"
+                           strokeDasharray="188.5"
+                           strokeDashoffset={188.5 * (1 - timeLeft / 20)}
                            strokeLinecap="round"
                            style={{ transition: 'stroke-dashoffset 0.5s linear' }}
                          />
@@ -1063,16 +1063,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                        className={isTheirTurn ? "pulse-active-avatar" : ""}
                        style={{
                          position: 'absolute',
-                         top: '5px',
-                         left: '5px',
-                         width: '40px',
-                         height: '40px',
+                         top: '6px',
+                         left: '6px',
+                         width: '56px',
+                         height: '56px',
                          borderRadius: '50%',
                          background: getAvatarGradient(p.name),
                          display: 'flex',
                          alignItems: 'center',
                          justifyContent: 'center',
-                         fontSize: '15px',
+                         fontSize: '20px',
                          fontWeight: 'bold',
                          color: 'white',
                          border: isTheirTurn ? '1.5px solid #f1c40f' : '1px solid rgba(255,255,255,0.1)'
@@ -1084,14 +1084,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                      {gameState && gameState.dealerIndex === idx && (
                        <div style={{
                          position: 'absolute',
-                         top: '1px',
-                         right: '1px',
-                         width: '18px',
-                         height: '18px',
+                         top: '0px',
+                         right: '0px',
+                         width: '20px',
+                         height: '20px',
                          borderRadius: '50%',
                          background: 'linear-gradient(135deg, #FFE07D 0%, #F39C12 100%)',
                          color: '#120a00',
-                         fontSize: '10px',
+                         fontSize: '11px',
                          fontWeight: 'bold',
                          display: 'flex',
                          alignItems: 'center',
@@ -1107,15 +1107,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                    
                    {/* Player Name */}
                    <div style={{
-                     marginTop: '4px',
+                     marginTop: '5px',
                      background: isTheirTurn ? '#f1c40f' : 'rgba(0,0,0,0.7)',
                      color: isTheirTurn ? 'black' : 'white',
-                     padding: '2px 6px',
-                     borderRadius: '6px',
-                     fontSize: '9px',
+                     padding: '3px 8px',
+                     borderRadius: '7px',
+                     fontSize: '10px',
                      fontWeight: 'bold',
                      whiteSpace: 'nowrap',
-                     maxWidth: '65px',
+                     maxWidth: '80px',
                      overflow: 'hidden',
                      textOverflow: 'ellipsis',
                      boxShadow: '0 2px 5px rgba(0,0,0,0.3)',
@@ -1128,13 +1128,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ roomCode, players, myUsern
                    {/* Team Label */}
                    {gameState.gameMode === 'PARTNERSHIP' && (
                      <div style={{
-                       marginTop: '2px',
+                       marginTop: '3px',
                        background: (idx === gameState.myIndex || idx === (gameState.myIndex + 2) % 4) ? 'rgba(52, 152, 219, 0.2)' : 'rgba(231, 76, 60, 0.2)',
                        color: (idx === gameState.myIndex || idx === (gameState.myIndex + 2) % 4) ? '#3498db' : '#e74c3c',
                        border: `1px solid ${(idx === gameState.myIndex || idx === (gameState.myIndex + 2) % 4) ? 'rgba(52, 152, 219, 0.4)' : 'rgba(231, 76, 60, 0.4)'}`,
-                       padding: '1px 4px',
-                       borderRadius: '4px',
-                       fontSize: '7.5px',
+                       padding: '2px 5px',
+                       borderRadius: '5px',
+                       fontSize: '8px',
                        fontWeight: 'bold',
                        whiteSpace: 'nowrap'
                      }}>
