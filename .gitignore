@@ -1,4 +1,23 @@
+# Dependencies
 node_modules/
+.idea/
+
+# Build outputs
 dist/
+build/
+
+# Environment & secrets
 .env
+*.env
 service-account.json
+google-services.json
+
+# Capacitor
+ios/App/Pods/
+android/.gradle/
+android/app/build/
+android/build/
+
+# OS files
+.DS_Store
+Thumbs.db
